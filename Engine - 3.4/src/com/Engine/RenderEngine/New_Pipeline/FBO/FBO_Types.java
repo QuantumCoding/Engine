@@ -1,0 +1,77 @@
+package com.Engine.RenderEngine.New_Pipeline.FBO;
+
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL12.*;
+import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL14.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL21.*;
+import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL31.*;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL33.*;
+import static org.lwjgl.opengl.GL40.*;
+import static org.lwjgl.opengl.GL41.*;
+import static org.lwjgl.opengl.GL42.*;
+import static org.lwjgl.opengl.GL43.*;
+import static org.lwjgl.opengl.GL44.*;
+
+public final class FBO_Types {
+	private FBO_Types() { }
+	
+	public static enum Attachment {
+		ColourBuffer(GL_COLOR_ATTACHMENT0, 15, GL_COLOR_BUFFER_BIT, TargetFormat.Colour),
+		DepthBuffer(GL_DEPTH_ATTACHMENT, 0, GL_DEPTH_BUFFER_BIT, TargetFormat.Depth),
+		StencilBuffer(GL_STENCIL_ATTACHMENT, 0, GL_STENCIL_BUFFER_BIT, TargetFormat.Stencil),
+		DepthStencilBuffer(GL_DEPTH_STENCIL_ATTACHMENT, 0, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, TargetFormat.DepthStencil);
+		
+		private TargetFormat format;
+		private int glAttchment, maxIndex, glClearBit;
+		private Attachment(int glAttachment, int maxIndex, int glClearBit, TargetFormat format) {
+			this.glAttchment = glAttachment;
+			this.glClearBit = glClearBit;
+			this.maxIndex = maxIndex;
+			this.format = format;
+		}
+		
+		public TargetFormat getFormat() { return format; }
+		
+		public int glAttchment() { return glAttchment; }
+		public int glClearBit() { return glClearBit; }
+		public int getMaxIndex() { return maxIndex; }
+		
+		public int maskClearBit(int mask) { return mask | glClearBit; }
+	}
+	
+	public static enum TargetFormat {
+		Colour(GL_RGBA, GL_RGBA16, GL_RGB8, GL_RGB4),
+		Depth(GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT16),
+		Stencil(GL_STENCIL, GL_STENCIL, GL_STENCIL, GL_STENCIL),
+		DepthStencil(GL_DEPTH_STENCIL, GL_DEPTH32F_STENCIL8, GL_DEPTH24_STENCIL8, GL_DEPTH24_STENCIL8);
+		
+		private int external, max, norm, min;
+		private TargetFormat(int external, int max, int norm, int min) {
+			this.max = max; this.norm = norm; this.min = min;
+			this.external = external;
+		}
+		
+		public int getExternal() { return external; }
+		
+		public int getMax() { return max; }
+		public int getDefualt() { return norm; }
+		public int getMin() { return min; }
+		
+		public int getFormat(TargetLevel level) {
+			switch(level) {
+				case Min: return getMin();
+				case Default: return getDefualt();
+				case Max: return getMax();
+				
+				default: throw new IllegalArgumentException(level + " is not a valid InitLevel");
+			}
+		}
+		
+		public static enum TargetLevel { Min, Default, Max; }
+	}
+}
