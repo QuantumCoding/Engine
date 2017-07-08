@@ -9,6 +9,8 @@ import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glEnable;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 
 import javax.imageio.ImageIO;
 
@@ -27,6 +29,8 @@ import com.Engine.RenderEngine.Font.Font;
 import com.Engine.RenderEngine.Font.TextMeshStitcher;
 import com.Engine.RenderEngine.Font.Render.TextMesh;
 import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
+import com.Engine.RenderEngine.GLFunctions.DepthTest;
+import com.Engine.RenderEngine.GLFunctions.StencilTest;
 import com.Engine.RenderEngine.Lights.Light;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
@@ -43,6 +47,7 @@ import com.Engine.RenderEngine.Textures.Texture2D;
 import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.RenderEngine.Window.Window;
+import com.Engine.Util.Time;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
 import com.Engine.Util.Vectors.Vector4f;
@@ -54,6 +59,8 @@ public class RenderTester {
 		Window window = new Window();
 		window.initDisplay(600, 600, false);
 		window.setFPS(120);
+
+		// https://learnopengl.com/#!Advanced-OpenGL/Stencil-testing
 		
 		Camera camera = new Camera(70, window.getAspectRatio(), 0.3f, 1000);
 		CameraMovement movement = new CameraMovement(camera, 2f, 1.5f, 0.1f);
