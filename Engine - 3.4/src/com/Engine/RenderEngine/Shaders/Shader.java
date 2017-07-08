@@ -17,12 +17,6 @@ import static org.lwjgl.opengl.GL20.glGetShaderi;
 import static org.lwjgl.opengl.GL20.glGetUniformLocation;
 import static org.lwjgl.opengl.GL20.glLinkProgram;
 import static org.lwjgl.opengl.GL20.glShaderSource;
-import static org.lwjgl.opengl.GL20.glUniform1f;
-import static org.lwjgl.opengl.GL20.glUniform1i;
-import static org.lwjgl.opengl.GL20.glUniform2f;
-import static org.lwjgl.opengl.GL20.glUniform3f;
-import static org.lwjgl.opengl.GL20.glUniform4f;
-import static org.lwjgl.opengl.GL20.glUniformMatrix4;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 import static org.lwjgl.opengl.GL20.glValidateProgram;
 
@@ -30,61 +24,133 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.annotation.AnnotationFormatError;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.FloatBuffer;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Matrix4f;
 
-import com.Engine.Util.Vectors.Vector2f;
+import com.Engine.RenderEngine.Models.ModelData.Attribute;
+import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformTexture;
 import com.Engine.Util.Vectors.Vector3f;
-import com.Engine.Util.Vectors.Vector4f;
 
 public abstract class Shader {	
 	private int programId;
 	private int vertexShaderId;
 	private int fragmentShaderId;
 	
-	private Renderer<?, ?> renderer;
+	private Renderer<?, ?, ?> renderer;
 	
-	public Shader(String vsFilePath, String fsFilePath, Class<? extends Renderer<?, ?>> rendererClass) {
+	public Shader(String vsFilePath, String fsFilePath, Class<? extends Renderer<?, ?, ?>> rendererClass) {
 		String classPath = getClass().getName();
 		String className = classPath.substring(classPath.lastIndexOf(".") + 1);
 		
-		try {
-			renderer = rendererClass.getConstructor(Shader.class).newInstance(this);
-		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
-			System.err.println("Failed to load Renderer for " + className + ". Caused By: " + e.toString());
+		if(rendererClass != null) {
+			try {
+				renderer = rendererClass.getConstructor(Shader.class).newInstance(this);
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+					| NoSuchMethodException | SecurityException e) {
+				System.err.println("Failed to load Renderer for " + className + ".\nCaused By: " + e.toString());
+			}
 		}
 		
 		programId = glCreateProgram();
+		
 		bind();
+			vertexShaderId = loadShader(vsFilePath, GL_VERTEX_SHADER);
+			fragmentShaderId = loadShader(fsFilePath, GL_FRAGMENT_SHADER);
+	
+			glAttachShader(programId, vertexShaderId);
+			glAttachShader(programId, fragmentShaderId);
 		
-		vertexShaderId = loadShader(vsFilePath, GL_VERTEX_SHADER);
-		fragmentShaderId = loadShader(fsFilePath, GL_FRAGMENT_SHADER);
+			bindAttributies(); // Do not move
+		
+			glLinkProgram(programId);			
+			glValidateProgram(programId);
+		
+			bind();
+				initUniformLocations();
+		unbind();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected void initUniformLocations() {
+		for(Field field : getClass().getDeclaredFields()) {
+			if(!field.isAnnotationPresent(Uniform.class)) continue;
+			
+			Class<?> type = field.getType();
+			boolean isArray = type.isArray();
+			if(isArray) type = type.getComponentType();
 
-		glAttachShader(programId, vertexShaderId);
-		glAttachShader(programId, fragmentShaderId);
-		
-		bindAttributies();
-		
-		glLinkProgram(programId);			
-		glValidateProgram(programId);
-		
-		initUniformLocations();
+			if(!UniformType.class.isAssignableFrom(type) || type.equals(UniformType.class)) 
+				throw new AnnotationFormatError(Uniform.ERROR_MESSAGE + "; not of type " + type.getSimpleName());
+			
+			Uniform annotation = field.getAnnotation(Uniform.class);
+			String name = annotation.value().isEmpty() ? field.getName() : annotation.value();
+			int index = annotation.index();
+			
+			Object value;
+			
+			if(isArray) {
+				value = Array.newInstance(type, annotation.size());
+				for(int i = 0; i < annotation.size(); i ++)
+					Array.set(value, i, createUniform(name + "["+i+"]", index, (Class<? extends UniformType<?>>) type));
+			} else {
+				value = createUniform(name, index, (Class<? extends UniformType<?>>) type);
+			}
+			
+			try { 
+				if((field.getModifiers() & Modifier.FINAL) != 0) {
+					Field modifiersField = Field.class.getDeclaredField("modifiers");
+					modifiersField.setAccessible(true);
+					modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+				}
+				
+				field.setAccessible(true); field.set(this, value);
+			} catch(IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	private <E> UniformType<E> createUniform(String name, int index, Class<? extends UniformType<E>> type) {
+		try {
+			UniformType<E> value;
+			if(type.equals(UniformTexture.class)) {
+				Constructor<? extends UniformType<E>> constructor = 
+						(Constructor<? extends UniformType<E>>) type.getConstructor(String.class, Integer.class);
+				value = constructor.newInstance(name, index);
+			} else {
+				Constructor<? extends UniformType<E>> constructor = 
+						(Constructor<? extends UniformType<E>>) type.getConstructor(String.class);
+				value = constructor.newInstance(name);
+			}
+			
+			Method method = type.getMethod("attach", Shader.class);
+			method.invoke(value, this);
+			
+			return value;
+		} catch(NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException 
+				| IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
-	protected abstract void initUniformLocations();
-	
 	protected int getUniformLocation(String uniformName) {
 		return glGetUniformLocation(programId, uniformName);
 	}
 	
 	protected abstract void bindAttributies();
 	
-	protected void bindAttribute(int attribute, String variableName) {
-		glBindAttribLocation(programId, attribute, variableName);
+	protected void bindAttribute(Attribute attribute, String variableName) {
+		glBindAttribLocation(programId, attribute.getId(), variableName);
 	}
 	
 	private int loadShader(String fileName, int type) {
@@ -119,47 +185,10 @@ public abstract class Shader {
 	public void bind() { glUseProgram(programId); }	
 	public static void unbind() { glUseProgram(0); }
 	
-	public void loadInt(int location, int value) {
-		glUniform1i(location, value);
-	}
+	public int getProgramId() { return programId; }
+	public Renderer<?, ?, ?> getRenderer() { return renderer; }
 	
-	public void loadFloat(int location, float value) {
-		glUniform1f(location, value);
-	}
-	
-	public void loadVector2f(int location, Vector2f value) {
-		glUniform2f(location, value.x, value.y);
-	}
-	
-	public void loadVector3f(int location, Vector3f value) {
-		glUniform3f(location, value.x, value.y, value.z);
-	}
-	
-	public void loadVector4f(int location, Vector4f value) {
-		glUniform4f(location, value.x, value.y, value.z, value.w);
-	}
-
-	public void loadBoolean(int location, boolean value) {
-		glUniform1f(location, value ? 1 : 0);
-	}
-
-	private static FloatBuffer floatBuffer = BufferUtils.createFloatBuffer(16);	
-	public void loadMatrix(int location, Matrix4f matrix) {
-		matrix.store(floatBuffer); floatBuffer.flip();
-		glUniformMatrix4(location, false, floatBuffer);
-	}
-	
-	public int getProgramId() {
-		return programId;
-	}
-
-	public Renderer<?, ?> getRenderer() {
-		return renderer;
-	}
-	
-	public int hashCode() {
-		return programId;
-	}
+	public int hashCode() { return programId; }
 	
 	public boolean equals(Object obj) {
 		if(obj == this) return true;
@@ -184,13 +213,14 @@ public abstract class Shader {
 		
 		glDeleteProgram(programId);
 	}
-//---------------------------------------------- Static Resources ---------------------------------------------------------------\\	
+	
+//-------------------------------------------- Static Resources -----------------------------------------------------\\	
 
 	private static ClassNode rootNode = new ClassNode() {{ clazz = Object.class; }};
 	
-	public static final int ATTRIBUTE_LOC_POSITIONS = nextAttribId(Shader.class);
-	public static final int ATTRIBUTE_LOC_TEXCOORDS = nextAttribId(Shader.class);
-	public static final int ATTRIBUTE_LOC_NORMALS = nextAttribId(Shader.class);
+	public static final Attribute ATTRIBUTE_LOC_POSITIONS = nextAttribId(Shader.class);
+	public static final Attribute ATTRIBUTE_LOC_TEXCOORDS = nextAttribId(Shader.class);
+	public static final Attribute ATTRIBUTE_LOC_NORMALS   = nextAttribId(Shader.class);
 	
 	protected static Matrix4f viewMatrix;
 	protected static Matrix4f projectionMatrix;
@@ -200,24 +230,9 @@ public abstract class Shader {
 	public static Matrix4f getProjectionMatrix() { return projectionMatrix; }
 	public static Vector3f getSkyColor() { return skyColor; }
 
-	public static void setViewMatrix(Matrix4f viewMatrix) {
-		Shader.viewMatrix = viewMatrix;
-	}
-
-	public static void setProjectionMatrix(Matrix4f projectionMatrix) {
-		Shader.projectionMatrix = projectionMatrix;
-	}
-	
-	public static void setSkyColor(Vector3f skyColor) {
-		Shader.skyColor = skyColor;
-	}
-	
-	public static class ShaderCreationException extends Exception {
-		private static final long serialVersionUID = 1L;
-		
-		public ShaderCreationException() { super(); }
-		public ShaderCreationException(String message) {super(message);}
-	}
+	public static void setViewMatrix(Matrix4f viewMatrix) { Shader.viewMatrix = viewMatrix; }
+	public static void setProjectionMatrix(Matrix4f projectionMatrix) { Shader.projectionMatrix = projectionMatrix; }
+	public static void setSkyColor(Vector3f skyColor) { Shader.skyColor = skyColor; }
 	
 	private static class ClassNode {
 		HashMap<Class<?>, ClassNode> children = new HashMap<>();
@@ -225,8 +240,8 @@ public abstract class Shader {
 		int nextId;
 	}
 
-	public static int nextAttribId(Class<? extends Shader> clazz) { return nextAttribId(clazz, 1); }
-	public static int nextAttribId(Class<? extends Shader> clazz, int reserve) {
+	public static Attribute nextAttribId(Class<? extends Shader> clazz) { return nextAttribId(clazz, 1); }
+	public static Attribute nextAttribId(Class<? extends Shader> clazz, int reserve) {
 		Class<?> current = clazz; int level = 0;
 		while((current = current.getSuperclass()) != Object.class) level ++;
 
@@ -251,7 +266,7 @@ public abstract class Shader {
 		
 		if(node.children.size() > 0)
 			throw new IllegalStateException("Cannot generate new IDs once a subclass has generated IDs");
-		try { return node.nextId ++; }
+		try { return new Attribute(node.nextId ++, reserve); }
 		finally { node.nextId += reserve - 1; }
 	} 
 }

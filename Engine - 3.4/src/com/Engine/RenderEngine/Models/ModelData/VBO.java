@@ -1,4 +1,4 @@
-package com.Engine.RenderEngine.NewShaders;
+package com.Engine.RenderEngine.Models.ModelData;
 
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW;

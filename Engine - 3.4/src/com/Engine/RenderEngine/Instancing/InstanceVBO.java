@@ -11,6 +11,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.util.vector.Matrix4f;
 
+import com.Engine.RenderEngine.Models.ModelData.Attribute;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
 import com.Engine.Util.Vectors.Vector4f;
@@ -42,19 +43,17 @@ public class InstanceVBO {
 		return new InstanceVBO(instanceLength, instanceCount);
 	}
 	
-	public void nextAttribute(int vao, int attribute, int unitSize, int renderStrid) {
+	public void nextAttribute(int vao, Attribute attribute, int unitSize, int renderStrid) {
 		InstanceUtil.addInstanceAttribute(vao, vbo, attribute, unitSize, instanceLength, attrubiuteOffset, renderStrid);
-		attrubiuteOffset += unitSize;
+		attrubiuteOffset += unitSize * attribute.getStride();
 	}
 	
 	public void prepVBO() {
 		buffer.clear(); buffer.put(dataPool); buffer.flip();
 		
 		bind();
-		
-		glBufferData(GL_ARRAY_BUFFER, buffer.capacity() * 4, GL_STREAM_DRAW);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, buffer);
-		
+			glBufferData(GL_ARRAY_BUFFER, buffer.capacity() * 4, GL_STREAM_DRAW);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, buffer);
 		unbind();
 	}
 	
@@ -121,12 +120,6 @@ public class InstanceVBO {
 	}
 	
 	public int getVBO() { return vbo; }
-	
-	public void bind() {
-		GL15.glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	}
-	
-	public static void unbind() {
-		GL15.glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
+	public void bind() { GL15.glBindBuffer(GL_ARRAY_BUFFER, vbo); }
+	public static void unbind() { GL15.glBindBuffer(GL_ARRAY_BUFFER, 0); }
 }

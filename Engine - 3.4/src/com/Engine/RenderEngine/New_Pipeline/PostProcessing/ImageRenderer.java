@@ -6,8 +6,8 @@ import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glEnable;
 
-import com.Engine.RenderEngine.NewShaders.NewModelData;
-import com.Engine.RenderEngine.NewShaders.NewShader;
+import com.Engine.RenderEngine.Models.ModelData.ModelData;
+import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Textures.Texture;
 
 public class ImageRenderer {
@@ -16,8 +16,8 @@ public class ImageRenderer {
 		 1,1,	 1,-1
 	};
 	
-	private static final NewModelData MODEL = new NewModelData();
-	static { MODEL.storeDataInAttributeList(NewShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICIES, false); }
+	private static final ModelData MODEL = new ModelData();
+	static { MODEL.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICIES, false); }
 	
 	public static void prepOpenGL() {
 		glDisable(GL_DEPTH_TEST);

@@ -14,4 +14,9 @@ public interface IRenderable<T extends RenderProperties> {
 	
 	public default int getVAOId() { return getModelData().getVAOId(); }
 	public default int getIndiceCount() { return getModelData().getIndiceCount(); }
+
+	public default void bind() { getModelData().bind(); }
+	public default void unbind() { getModelData().unbind(); }
+	
+	public default void cleanUp() { getModelData().cleanUp(); }
 }

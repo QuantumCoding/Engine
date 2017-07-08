@@ -1,9 +1,9 @@
 package com.Engine.RenderEngine.New_Pipeline.PostProcessing;
 
-import com.Engine.RenderEngine.NewShaders.NewRenderer;
-import com.Engine.RenderEngine.NewShaders.NewShader;
+import com.Engine.RenderEngine.Shaders.Renderer;
+import com.Engine.RenderEngine.Shaders.Shader;
 
-public abstract class ImageShader extends NewShader {
+public abstract class ImageShader extends Shader {
 	public ImageShader(String vsFilePath, String fsFilePath) {
 		super(vsFilePath, fsFilePath, null);
 	}
@@ -12,7 +12,7 @@ public abstract class ImageShader extends NewShader {
 		super.bindAttribute(ATTRIBUTE_LOC_POSITIONS, "position");
 	}
 	
-	public NewRenderer<?, ?, ?> getRenderer() { 
+	public Renderer<?, ?, ?> getRenderer() { 
 		throw new IllegalAccessError("ImageShaders do not have Renderers! Use " + ImageRenderer.class + " instead"); 
 	}
 }

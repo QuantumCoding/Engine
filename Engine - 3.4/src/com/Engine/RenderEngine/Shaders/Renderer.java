@@ -1,19 +1,23 @@
 package com.Engine.RenderEngine.Shaders;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
 
 import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.Util.Vectors.MatrixUtil;
 import com.Engine.Util.Vectors.Vector3f;
 
-public abstract class Renderer<T extends IRenderable<? super E>, E extends RenderProperties> {
-	protected Shader shader;
-	protected HashMap<T, ArrayList<E>> renders;
+public abstract class Renderer<T extends IRenderable<? super E>, E extends RenderProperties, S extends Shader> {
+	protected S shader;
+	protected HashMap<T, List<E>> renders;
 	private boolean usingFrustumCulling;
 	
+	@SuppressWarnings("unchecked")
 	public Renderer(Shader shader) {
-		this.shader = shader;
+		this.shader = (S) shader;
 		renders = new HashMap<>();
 		usingFrustumCulling = true;
 	}
@@ -25,20 +29,13 @@ public abstract class Renderer<T extends IRenderable<? super E>, E extends Rende
 		if(usingFrustumCulling) {
 			Vector3f vertex = model.getModelData().getCenter();
 			float radius = model.getModelData().getRadius();
-			
-//			Matrix4f viewMatrix = Shader.getViewMatrix();
-//			if(viewMatrix == null) viewMatrix = MatrixUtil.initViewMatrix(camera);
-//			Matrix4f modelView = Matrix4f.mul(viewMatrix, property.getTransformMatrix(), null);
 			vertex = vertex.transform(property.getTransformMatrix());//modelView);
 			
 			if(shouldCull(camera, vertex, radius)) return false;
-			
-//			if(getClass() == DefaultRenderer.class)
-//				System.out.println("Render!" + System.currentTimeMillis());
 		}
 		
 		if(!renders.containsKey(model)) {
-			renders.put(model, new ArrayList<>());
+			renders.put(model, new LinkedList<>());
 		}
 		
 		renders.get(model).add(property);
@@ -69,37 +66,35 @@ public abstract class Renderer<T extends IRenderable<? super E>, E extends Rende
 		if(dot.y > zy + dy || dot.y < -zy - dy)
 			return true;
 		
-//		float d = camera.getSphereCullY() * radius;
-//		float z = (float) (dot.z * Math.tan(camera.getFov() / 2));
-//		if(dot.y > z + d || dot.y < z - d)
-//			return true;
-//		
-//		d = camera.getSphereCullX() * radius;
-//		z *= camera.getAspect();
-//		if(dot.x > z + d || dot.x < z - d)
-//			return true;
-		
 		return false;
 	}
 	
 	public void render() {
 		prepareOpenGL();
-		renderModels();	
-		revertOpenGL();
 		
-		renders.clear();
+		for(Iterator<Entry<T, List<E>>> modelIter = renders.entrySet().iterator(); modelIter.hasNext(); ) {
+			Entry<T, List<E>> entry = modelIter.next();
+			T model = entry.getKey();
+			
+			bindModel(model);
+			for(Iterator<E> iter = entry.getValue().iterator(); iter.hasNext(); )
+				renderModel(model, iter.next());
+			unbindModel(model);
+		}
+		
+		revertOpenGL();
 	}
-
+	
+	public void clear() { renders.clear(); }
+	
 	protected void prepareOpenGL() {}
+	public abstract void bindModel(T model);
+	public abstract void renderModel(T model, E properties);
+	public abstract void unbindModel(T model);
 	protected void revertOpenGL() {}
 	
-	public abstract void renderModels();	
 	public boolean isAcceptedShader(Shader shader) { return shader == getShader(); }
-	public abstract int getRenderStage();
-	
-	public Shader getShader() {
-		return shader;
-	}
+	public S getShader() { return shader; }
 	
 	public void usingFrustumCulling(boolean useFrustumCulling) {
 		this.usingFrustumCulling = useFrustumCulling;

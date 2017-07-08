@@ -1,11 +1,12 @@
 package com.Engine.Demo.MultiRender;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
-import com.Engine.RenderEngine.Particles.Render.ParticleShader;
-import com.Engine.RenderEngine.Shaders.Default.Model;
+import com.Engine.RenderEngine.Shaders.IRenderable;
+import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.Util.Vectors.Vector3f;
 
-public class MultiModel extends Model {
+public class MultiModel implements IRenderable<MultiRenderProperties> {
 	private static final float[] VERTICES = {
 		-0.5f,  0.5f,	-0.5f, -0.5f,
 		 0.5f, -0.5f,	 0.5f,  0.5f,
@@ -23,13 +24,23 @@ public class MultiModel extends Model {
 	private static final ModelData MULTI_MODEL_DATA; static {
 		MULTI_MODEL_DATA = new ModelData(1, 1000, new Vector3f());
 		
-		MULTI_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, false);
-		MULTI_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, false);
+		MULTI_MODEL_DATA.storeDataInAttributeList(MultiShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, false);
+		MULTI_MODEL_DATA.storeDataInAttributeList(MultiShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, false);
 		
 		MULTI_MODEL_DATA.loadIndicies(INDICES);
 	}
 	
-	public MultiModel() {
-		super(MULTI_MODEL_DATA);
+	private MultiShader shader;
+	private MultiRenderer renderer;
+	
+	public MultiModel(MultiShader shader) {
+		renderer = (MultiRenderer) (this.shader = shader).getRenderer();
 	}
+
+	public void render(MultiRenderProperties properties, Camera camera) {
+		renderer.addModel(this, properties, camera);
+	}
+
+	public Shader getShader() { return shader; }
+	public ModelData getModelData() { return MULTI_MODEL_DATA; }
 }

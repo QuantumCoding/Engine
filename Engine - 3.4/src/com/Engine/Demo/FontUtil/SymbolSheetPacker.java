@@ -14,8 +14,8 @@ import javax.swing.JOptionPane;
 import com.Engine.Demo.FontUtil.FontCreater.ProgressNotify;
 import com.Engine.Demo.FontUtil.SymbolFactory.FontMetadata;
 import com.Engine.Demo.FontUtil.SymbolFactory.Symbol;
-import com.Engine.Demo.XML.XMLProperty;
-import com.Engine.Demo.XML.XMLTag;
+import com.Engine.Util.XML.XMLProperty;
+import com.Engine.Util.XML.XMLTag;
 
 public class SymbolSheetPacker {
 	public static class SymbolSheetMetadata implements Serializable {

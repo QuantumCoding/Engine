@@ -37,12 +37,12 @@ public class ParticleInstanceRender implements IRenderableInstance<ParticleRende
 	public static final int INSTANCE_DATA_LENGTH = 22;
 	
 	private Shader shader;
-	private Renderer<ParticleInstanceRender, ParticleRenderProperties> renderer;
+	private Renderer<ParticleInstanceRender, ParticleRenderProperties, ParticleShader> renderer;
 	
 	@SuppressWarnings("unchecked")
 	public ParticleInstanceRender(Shader shader) {
 		this.shader = shader;
-		renderer = (Renderer<ParticleInstanceRender, ParticleRenderProperties>) shader.getRenderer();
+		renderer = (Renderer<ParticleInstanceRender, ParticleRenderProperties, ParticleShader>) shader.getRenderer();
 	}
 	
 	public void addInstanceAttributes(InstanceVBO vbo) {
@@ -54,10 +54,7 @@ public class ParticleInstanceRender implements IRenderableInstance<ParticleRende
 		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_DIVISOR, 1, 1);
 		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_BLEND, 1, 1);
 
-		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_MODEL_VIEW + 0, 4, 1);
-		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_MODEL_VIEW + 1, 4, 1);
-		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_MODEL_VIEW + 2, 4, 1);
-		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_MODEL_VIEW + 3, 4, 1);
+		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_MODEL_VIEW, 4, 1);
 	}
 	
 	public void render(ParticleRenderProperties properties, Camera camera) {
@@ -89,6 +86,4 @@ public class ParticleInstanceRender implements IRenderableInstance<ParticleRende
 	
 	public int getInstanceLength() { return INSTANCE_DATA_LENGTH; }
 	public int getInstanceCount() { return MAX_PARTICLE_COUNT; }
-	
-	
 }

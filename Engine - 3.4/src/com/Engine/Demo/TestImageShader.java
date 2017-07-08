@@ -1,8 +1,8 @@
 package com.Engine.Demo;
 
-import com.Engine.RenderEngine.NewShaders.Uniforms.Uniform;
-import com.Engine.RenderEngine.NewShaders.Uniforms.UniformTexture;
 import com.Engine.RenderEngine.New_Pipeline.PostProcessing.ImageShader;
+import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformTexture;
 
 public class TestImageShader extends ImageShader {
 	private static final String VERTEX_SHADER_LOC = "TestImageShader.vsh";

@@ -1,8 +1,8 @@
-package com.Engine.Demo.XML;
+package com.Engine.Util.XML;
 
-import static com.Engine.Demo.XML.XMLRegistry.ESCAPE_CODES;
-import static com.Engine.Demo.XML.XMLRegistry.ESCAPE_REVERT;
-import static com.Engine.Demo.XML.XMLRegistry.PARSERS;
+import static com.Engine.Util.XML.XMLRegistry.ESCAPE_CODES;
+import static com.Engine.Util.XML.XMLRegistry.ESCAPE_REVERT;
+import static com.Engine.Util.XML.XMLRegistry.PARSERS;
 
 import java.io.BufferedReader;
 import java.io.IOException;

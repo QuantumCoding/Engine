@@ -1,8 +1,8 @@
-package com.Engine.RenderEngine.NewShaders.Uniforms;
+package com.Engine.RenderEngine.Shaders.Uniforms;
 
 import static org.lwjgl.opengl.GL20.glUniform4f;
 
-import com.Engine.RenderEngine.NewShaders.UniformType;
+import com.Engine.RenderEngine.Shaders.UniformType;
 import com.Engine.Util.Vectors.Vector4f;
 
 public class UniformVec4 extends UniformType<Vector4f> {

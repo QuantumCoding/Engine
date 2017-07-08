@@ -14,5 +14,4 @@ void main(void) {
 	vec4 sample2 = texture(texture0, textureCoord2);
 
 	out_colour = mix(sample1, sample2, blend);
-
 }

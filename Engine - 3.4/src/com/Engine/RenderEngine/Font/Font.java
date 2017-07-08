@@ -9,8 +9,8 @@ import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
-import com.Engine.Demo.XML.XMLParser;
-import com.Engine.Demo.XML.XMLTag;
+import com.Engine.Util.XML.XMLParser;
+import com.Engine.Util.XML.XMLTag;
 import com.Engine.RenderEngine.Font.Render.FontTexture;
 import com.Engine.RenderEngine.Font.Render.TextShader;
 

@@ -1,11 +1,11 @@
-package com.Engine.RenderEngine.NewShaders.Uniforms;
+package com.Engine.RenderEngine.Shaders.Uniforms;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.Engine.RenderEngine.NewShaders.UniformType;
+import com.Engine.RenderEngine.Shaders.UniformType;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

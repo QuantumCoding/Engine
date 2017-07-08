@@ -1,6 +1,6 @@
 package com.Engine.RenderEngine.Font;
 
-import com.Engine.Demo.XML.XMLTag;
+import com.Engine.Util.XML.XMLTag;
 
 public class Character {
 	private static final int PADDING = 8;//3;

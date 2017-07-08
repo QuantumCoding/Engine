@@ -6,6 +6,12 @@ import org.lwjgl.util.vector.Matrix4f;
 
 import com.Engine.RenderEngine.Lights.Light;
 import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformFloat;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformMat4;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformTexture;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformVec2;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformVec3;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
 
@@ -15,64 +21,29 @@ public class DefaultShader extends Shader {
 
 	private static final int LIGHT_COUNT = 4;
 	
-	private int location_skyColor;
-	private int location_fogDensity;
-	private int location_fogGradient;
+	@Uniform private UniformVec3 skyColor;
+	@Uniform private UniformFloat fogDensity;
+	@Uniform private UniformFloat fogGradient;
 
-	private int location_lightPosition[];
-	private int location_lightColor[];
-	private int location_lightAttenuation[];
-	private int location_shineDamper;
-	private int location_reflectivity;
+	@Uniform(size=LIGHT_COUNT) private UniformVec3 lightPosition[];
+	@Uniform(size=LIGHT_COUNT) private UniformVec3 lightColor[];
+	@Uniform(size=LIGHT_COUNT) private UniformVec3 lightAttenuation[];
+	@Uniform private UniformFloat shineDamper;
+	@Uniform private UniformFloat reflectivity;
 
-	private int location_numberOfRows;
-	private int location_offset;
+	@Uniform private UniformFloat numberOfRows;
+	@Uniform private UniformVec2 offset;
 	
-	private int location_transformationMatrix;
-	private int location_projectionMatrix;
-	private int location_viewMatrix;
+	@Uniform private UniformMat4 transformationMatrix;
+
+	@Uniform private UniformMat4 projectionMatrix;
+	@Uniform private UniformMat4 viewMatrix;
 	
-	private int location_texture0;
-	
-	private int location_time;
+	@Uniform private UniformTexture texture0;
+	@Uniform private UniformFloat time;
 	
 	public DefaultShader() {
 		super(VERTEX_SHADER_LOC, FRAGMENT_SHADER_LOC, DefaultRenderer.class);
-	}
-
-	@Override
-	protected void initUniformLocations() {
-		bind();
-		
-		location_skyColor = super.getUniformLocation("skyColor");
-		location_fogDensity = super.getUniformLocation("fogDensity");
-		location_fogGradient = super.getUniformLocation("fogGradient");
-		
-		location_shineDamper = super.getUniformLocation("shineDamper");
-		location_reflectivity = super.getUniformLocation("reflectivity");
-		
-
-		location_numberOfRows = super.getUniformLocation("numberOfRows");
-		location_offset = super.getUniformLocation("offset");
-		
-		location_transformationMatrix = super.getUniformLocation("transformationMatrix");
-		location_projectionMatrix = super.getUniformLocation("projectionMatrix");
-		location_viewMatrix =  super.getUniformLocation("viewMatrix");
-
-		location_texture0 = super.getUniformLocation("texture0");
-		location_time = super.getUniformLocation("time");
-		
-		location_lightPosition = new int[LIGHT_COUNT];
-		location_lightColor = new int[LIGHT_COUNT];
-		location_lightAttenuation = new int[LIGHT_COUNT];
-		
-		for(int i = 0; i < LIGHT_COUNT; i ++) {
-			location_lightPosition[i] = super.getUniformLocation("lightPosition[" + i + "]");
-			location_lightColor[i] = super.getUniformLocation("lightColor[" + i + "]");
-			location_lightAttenuation[i] = super.getUniformLocation("lightAttenuation[" + i + "]");
-		}
-
-		super.loadInt(location_texture0, 0);
 	}
 
 	@Override
@@ -85,36 +56,36 @@ public class DefaultShader extends Shader {
 	}
 	
 	public void loadTransformationMatrix(Matrix4f transformationMatrix) {
-		super.loadMatrix(location_transformationMatrix, transformationMatrix);
+		this.transformationMatrix.load(transformationMatrix);
 	}
 	
 	public void loadProjectionMatrix(Matrix4f projectionMatrix) {
-		super.loadMatrix(location_projectionMatrix, projectionMatrix);
+		this.projectionMatrix.load(projectionMatrix);
 	}
 	
 	public void loadViewMatrix(Matrix4f viewMatrix) {
-		super.loadMatrix(location_viewMatrix, viewMatrix);
+		this.viewMatrix.load(viewMatrix);
 	}
 	
 	public void loadFogValues(float density, float gradient) {
-		super.loadFloat(location_fogDensity, density);
-		super.loadFloat(location_fogGradient, gradient);
+		this.fogDensity.load(density);
+		this.fogGradient.load(gradient);
 	}
 	
 	public void loadSkyColor(Vector3f skyColor) {
-		super.loadVector3f(location_skyColor, skyColor);
+		this.skyColor.load(skyColor);
 	}
 	
 	public void loadLights(List<Light> lights) {	
 		for(int i = 0; i < LIGHT_COUNT; i ++) {
 			if(i < lights.size()) {
-				super.loadVector3f(location_lightPosition[i], lights.get(i).getPosition());
-				super.loadVector3f(location_lightColor[i], lights.get(i).getColor());
-				super.loadVector3f(location_lightAttenuation[i], lights.get(i).getAttenuation());
+				this.lightPosition[i].load(lights.get(i).getPosition());
+				this.lightColor[i].load(lights.get(i).getColor());
+				this.lightAttenuation[i].load(lights.get(i).getAttenuation());
 			} else {
-				super.loadVector3f(location_lightPosition[i], new Vector3f());
-				super.loadVector3f(location_lightColor[i], new Vector3f());		
-				super.loadVector3f(location_lightAttenuation[i], new Vector3f(1, 0, 0));		
+				this.lightPosition[i].load(new Vector3f());
+				this.lightColor[i].load(new Vector3f());		
+				this.lightAttenuation[i].load(new Vector3f(1, 0, 0));		
 			}
 		}
 	}
@@ -122,28 +93,24 @@ public class DefaultShader extends Shader {
 	public void loadLights(Light... lights) {	
 		for(int i = 0; i < LIGHT_COUNT; i ++) {
 			if(i < lights.length) {
-				super.loadVector3f(location_lightPosition[i], lights[i].getPosition());
-				super.loadVector3f(location_lightColor[i], lights[i].getColor());
-				super.loadVector3f(location_lightAttenuation[i], lights[i].getAttenuation());
+				this.lightPosition[i].load(lights[i].getPosition());
+				this.lightColor[i].load(lights[i].getColor());
+				this.lightAttenuation[i].load(lights[i].getAttenuation());
 			} else {
-				super.loadVector3f(location_lightPosition[i], new Vector3f());
-				super.loadVector3f(location_lightColor[i], new Vector3f());		
-				super.loadVector3f(location_lightAttenuation[i], new Vector3f(1, 0, 0));		
+				this.lightPosition[i].load(new Vector3f());
+				this.lightColor[i].load(new Vector3f());		
+				this.lightAttenuation[i].load(new Vector3f(1, 0, 0));		
 			}
 		}
 	}
 	
 	public void loadShineVariables(float damper, float reflectivity) {
-		super.loadFloat(location_shineDamper, damper);
-		super.loadFloat(location_reflectivity, reflectivity);
+		this.shineDamper.load(damper);
+		this.reflectivity.load(reflectivity);
 	}
 	
 	public void loadTextureAtlasIndex(float numberOfRows, Vector2f offset) {
-		super.loadFloat(location_numberOfRows, numberOfRows);
-		super.loadVector2f(location_offset, offset);
-	}
-	
-	public void loadTime(float time) {
-		super.loadFloat(location_time, time);
+		this.numberOfRows.load(numberOfRows);
+		this.offset.load(offset);
 	}
 }

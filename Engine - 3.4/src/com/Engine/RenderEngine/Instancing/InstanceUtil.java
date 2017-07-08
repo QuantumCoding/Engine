@@ -12,6 +12,8 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
 import static org.lwjgl.opengl.GL33.glVertexAttribDivisor;
 
+import com.Engine.RenderEngine.Models.ModelData.Attribute;
+
 public class InstanceUtil {
 	public static int createEmptyVBO(int floatCount) {
 		int vbo = glGenBuffers();
@@ -23,14 +25,20 @@ public class InstanceUtil {
 		return vbo;
 	}
 	
-	public static void addInstanceAttribute(int vao, int vbo, int attribute, int unitSize, int instanceLength, int offset, int renderStrid) {
+	public static void addInstanceAttribute(int vao, int vbo, Attribute attribute, int unitSize, int instanceLength, int offset, int renderStrid) {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBindVertexArray(vao);
 		
-		glEnableVertexAttribArray(attribute);
-		glVertexAttribPointer(attribute, unitSize, GL_FLOAT, false, instanceLength * 4, offset * 4);
-		glVertexAttribDivisor(attribute, renderStrid);
-		glDisableVertexAttribArray(attribute);
+		for(int i = 0; i < attribute.getStride(); i ++) {
+			int attribId = attribute.getId() + i;
+			
+			glEnableVertexAttribArray(attribId);
+			glVertexAttribPointer(attribId, unitSize, GL_FLOAT, false, instanceLength * 4, offset * 4);
+			glVertexAttribDivisor(attribId, renderStrid);
+			glDisableVertexAttribArray(attribId);
+			
+			offset += unitSize;
+		}
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);

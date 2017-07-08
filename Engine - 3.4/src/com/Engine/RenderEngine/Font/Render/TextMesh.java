@@ -12,7 +12,7 @@ public class TextMesh implements IRenderable<TextRenderProperties> {
 	
 	private Font font;
 	private TextShader shader;
-	private Renderer<TextMesh, TextRenderProperties> renderer;
+	private Renderer<TextMesh, TextRenderProperties, TextShader> renderer;
 	
 	@SuppressWarnings("unchecked")
 	public TextMesh(Font font, ModelData mesh) {
@@ -20,7 +20,7 @@ public class TextMesh implements IRenderable<TextRenderProperties> {
 		this.font = font;
 		
 		shader = font.getShader();
-		renderer = (Renderer<TextMesh, TextRenderProperties>) shader.getRenderer();
+		renderer = (Renderer<TextMesh, TextRenderProperties, TextShader>) shader.getRenderer();
 	}
 	
 	public void render(TextRenderProperties properties, Camera camera) {

@@ -1,4 +1,4 @@
-package com.Engine.Demo.XML;
+package com.Engine.Util.XML;
 
 public class XMLTextBlock extends XMLTag {
 	private String text;

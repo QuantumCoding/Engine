@@ -14,19 +14,20 @@ public class Attribute {
 	
 	public void enable() {
 		switch(attribStride) {
-			case 0: glEnableVertexAttribArray(attribId); return;
+			case 1: glEnableVertexAttribArray(attribId); return;
 			default: for(int i = 0; i < attribStride; i ++) glEnableVertexAttribArray(attribId + i); return;
 		}
 	}
 	
 	public void disable() {
 		switch(attribStride) {
-			case 0: glDisableVertexAttribArray(attribId); return;
+			case 1: glDisableVertexAttribArray(attribId); return;
 			default: for(int i = 0; i < attribStride; i ++) glDisableVertexAttribArray(attribId + i); return;
 		}
 	}
 	
 	public int getId() { return attribId; }
+	public int getStride() { return attribStride; }
 
 	public int hashCode() {
 		final int prime = 31;
