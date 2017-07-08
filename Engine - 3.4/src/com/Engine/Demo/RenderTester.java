@@ -1,5 +1,6 @@
 package com.Engine.Demo;
 
+import static com.Engine.RenderEngine.GLFunctions.StencilTest.ValueModifier.Incress;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_DEPTH_TEST;
 import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
@@ -7,10 +8,9 @@ import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glClearColor;
 import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glStencilMask;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
 
 import javax.imageio.ImageIO;
 
@@ -29,8 +29,10 @@ import com.Engine.RenderEngine.Font.Font;
 import com.Engine.RenderEngine.Font.TextMeshStitcher;
 import com.Engine.RenderEngine.Font.Render.TextMesh;
 import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
-import com.Engine.RenderEngine.GLFunctions.DepthTest;
+import com.Engine.RenderEngine.GLFunctions.Condition;
+import com.Engine.RenderEngine.GLFunctions.GLFace;
 import com.Engine.RenderEngine.GLFunctions.StencilTest;
+import com.Engine.RenderEngine.GLFunctions.StencilTest.ValueModifier;
 import com.Engine.RenderEngine.Lights.Light;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
@@ -47,7 +49,6 @@ import com.Engine.RenderEngine.Textures.Texture2D;
 import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.RenderEngine.Window.Window;
-import com.Engine.Util.Time;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
 import com.Engine.Util.Vectors.Vector4f;
@@ -59,19 +60,24 @@ public class RenderTester {
 		Window window = new Window();
 		window.initDisplay(600, 600, false);
 		window.setFPS(120);
-
+		
 		// https://learnopengl.com/#!Advanced-OpenGL/Stencil-testing
 		
 		Camera camera = new Camera(70, window.getAspectRatio(), 0.3f, 1000);
-		CameraMovement movement = new CameraMovement(camera, 2f, 1.5f, 0.1f);
+		CameraMovement movement = new CameraMovement(camera, 5f, 1.5f, 0.1f);
 		
 		MultiShader multiShader = new MultiShader();
 		DefaultShader defaultShader = new DefaultShader();
 		PhysicsShader physicsShader = new PhysicsShader();
 		
+		defaultShader.getRenderer().usingFrustumCulling(false);
+		multiShader.getRenderer().usingFrustumCulling(false);
+		
 		Texture2D texture0 = new Texture2D(ImageIO.read(RenderTester.class.getResource("/textures/Base.png")));
 		Texture2D texture1 = new Texture2D(ImageIO.read(RenderTester.class.getResource("/textures/Mask.png")));
 		Texture2D texture2 = new Texture2D(ImageIO.read(RenderTester.class.getResource("/textures/CubeMap.png")));
+		
+		Texture2D tableTexture = new Texture2D(ImageIO.read(RenderTester.class.getResource("/textures/tableTop.png")));
 		
 // --------------------------------------- Standard Models -------------------------------------------------- \\
 
@@ -108,7 +114,7 @@ public class RenderTester {
 		
 		FBO mainRenderFBO = new FBO(window.getWidth(), window.getHeight(), 4);
 		mainRenderFBO.attach(new RenderBuffer(mainRenderFBO), Attachment.ColourBuffer);
-		mainRenderFBO.attach(new RenderBuffer(mainRenderFBO), Attachment.DepthBuffer);
+		mainRenderFBO.attach(new RenderBuffer(mainRenderFBO), Attachment.DepthStencilBuffer);
 		
 		FBO.SCREEN_FBO.screenResized(window);
 		
@@ -118,6 +124,18 @@ public class RenderTester {
 		Light rotLight = new Light(new Vector3f(), new Vector3f(1), new Vector3f(.5, 0, .01)); 
 		Light light = new Light(new Vector3f(), new Vector3f(1), new Vector3f(1, 0, 0));
 		Light followLight = new Light(new Vector3f(), new Vector3f(1), new Vector3f(1, 0, 0)); //(.2, 0, .01));
+
+// ------------------------------------------ Stencil Test --------------------------------------------------- \\
+		
+		StencilTest mask = StencilTest.current().setTestCondition(Condition.Never).setFailOp(GLFace.Front, Incress);
+		StencilTest self = StencilTest.current().enableWriteMask(false).setTestCondition(Condition.Equal, 0, 0xFF);
+		StencilTest draw = StencilTest.current().enableWriteMask(false).setTestCondition(Condition.NotEqual, 0, 0xFF);
+		
+		boolean passedThrough = false;
+		boolean wasLastOnFront = true;
+		float lastZ = 0;
+
+// ------------------------------------------ Loop --------------------------------------------------- \\
 		
 		double frameTimeAvg = 0.0;
 		int frameAvgCounter = 0;	
@@ -135,10 +153,30 @@ public class RenderTester {
 			glEnable(GL_DEPTH_TEST);
 		    glEnable(GL_BLEND);
 		    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		    
+			Transform facingTransfrom = new Transform(new Vector3f(0, 2, -3), null, null);
 			
-		// ---------------------------- --------------- ---------------------------- \\
-		//	---------------------------- Keyboard Input ---------------------------- \\		
-		// ---------------------------- --------------- ---------------------------- \\
+
+		// ----------------------------- ------------ ---------------------------- \\
+		//	---------------------------- Stencil Swap ---------------------------- \\		
+	    // ----------------------------- ------------ ---------------------------- \\
+		    
+			float dz = camera.getZ() - lastZ;
+		    boolean nowOnFront = camera.getZ() > facingTransfrom.getTranslation().z;
+		    if(nowOnFront != wasLastOnFront && ((dz > 0 && passedThrough) || (dz < 0 && !passedThrough))) {
+		    	if(camera.getX() < 2.5 && camera.getX() > -2.5 && camera.getY() < 5 && camera.getY() > 0) {
+		    		passedThrough = !passedThrough;//camera.getRotY() < 180;
+		    		mask.setFailOp(passedThrough ? GLFace.Back : GLFace.Front, Incress);
+		    		mask.setFailOp(!passedThrough ? GLFace.Back : GLFace.Front, ValueModifier.Zero);
+		    	}
+		    }
+		    
+		    lastZ = camera.getZ();
+		    wasLastOnFront = nowOnFront;
+		    
+		// ---------------------------- -------------- ---------------------------- \\
+		//	--------------------------- Keyboard Input ---------------------------- \\		
+		// ---------------------------- -------------- ---------------------------- \\
 			
 			movement.update((float) window.getFrameTime());
 			followLight.setPosition(camera.getPosition());
@@ -155,8 +193,7 @@ public class RenderTester {
 			cubeModel.render(new DefaultRenderProperties(
 					new Transform(new Vector3f(0, 0, -8), new Vector3f(90, 0, 0), new Vector3f(1)), 100, .95f, 0), camera);
 			
-			Transform facingTransfrom = new Transform(new Vector3f(-1, 2, -5), null, null);
-			mesh.render(new TextRenderProperties(facingTransfrom, new Vector4f(.75f).setW(1)), camera);
+//			mesh.render(new TextRenderProperties(facingTransfrom, new Vector4f(.75f).setW(1)), camera);
 			multiModel.render(new MultiRenderProperties(facingTransfrom, texture0, texture1), camera);
 			
 			particleManager.render(camera);
@@ -188,18 +225,40 @@ public class RenderTester {
 			cubeModel.setTexture(cubeTexture2D);
 			cubeModel.render(new DefaultRenderProperties(
 					new Transform(rotLight.getPosition(), new Vector3f(90, 0, 0), new Vector3f(.1f)), 10, .5f, 0), camera);
-			
+
 			mainRenderFBO.bindDraw();
 				defaultShader.bind();
 				defaultShader.loadLights(light, followLight);
 
+				glStencilMask(~0);
 				mainRenderFBO.clear();
 				
-				multiShader.getRenderer().render();
+				
+				mask.enable();
+					multiShader.scale(5f, 5f);
+					multiShader.getRenderer().render();
+				self.enable();
+					multiShader.scale(5.5f, 5.5f);
+					multiShader.getRenderer().render();
+				draw.enable();
+				
+				if(passedThrough) {
+					StencilTest.disable();
+				}
+				
 				defaultShader.getRenderer().render();
 				physicsShader.getRenderer().render();
 				Font.DefaultShader.getRenderer().render();
 				ParticleManager.ParticleShader.getRenderer().render();
+			
+				multiShader.scale(1f, 1f);
+				StencilTest.disable();
+				
+				defaultShader.getRenderer().clear();
+				cubeModel.setTexture(tableTexture);
+				cubeModel.render(new DefaultRenderProperties(
+						new Transform(new Vector3f(0, -1, 0), null, new Vector3f(100).setY(0.01f)), 100, .01f, 0), camera);
+				defaultShader.getRenderer().render();
 			FBO.unbindDraw();
 			
 		// ---------------------------- -------------- ---------------------------- \\
@@ -207,7 +266,7 @@ public class RenderTester {
 		// ---------------------------- -------------- ---------------------------- \\
 			
 			mainRenderFBO.resolve();
-			
+
 //			ParticleManager.ParticleShader.getRenderer().render();
 //			Font.DefaultShader.getRenderer().render();
 			

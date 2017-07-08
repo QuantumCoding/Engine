@@ -8,7 +8,9 @@ out vec2 textureCoord;
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 
+uniform vec2 scale;
+
 void main(void) {
-	gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 0.0, 1.0);
+	gl_Position = projectionMatrix * modelViewMatrix * vec4(position * scale, 0.0, 1.0);
 	textureCoord = texCoord;
 }

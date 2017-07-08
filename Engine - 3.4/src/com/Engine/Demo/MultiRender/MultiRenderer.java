@@ -30,7 +30,8 @@ public class MultiRenderer extends Renderer<MultiModel, MultiRenderProperties, M
 		property.getTexture0().bind(0);
 		property.getTexture1().bind(1);
 
-		Matrix4f modelView = MatrixUtil.createModelViewMatrix(property.getTransform(), Shader.getViewMatrix());
+//		Matrix4f modelView = MatrixUtil.createModelViewMatrix(property.getTransform(), Shader.getViewMatrix());
+		Matrix4f modelView = Matrix4f.mul(Shader.getViewMatrix(), property.getTransformMatrix(), null);
 		shader.modelViewMatrix.load(modelView);
 		
 		glDrawElements(GL_TRIANGLES, model.getIndiceCount(), GL_UNSIGNED_INT, 0);

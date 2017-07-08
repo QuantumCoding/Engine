@@ -73,11 +73,11 @@ public class StencilTest extends GL_Function {
 		return set(face, fail, depth, pass, null, -1, -1, -1); }
 	
 	public StencilTest setTestCondition(Condition condition) { return set(GLFace.Both, null, null, null, condition, -1, -1, -1); }
-	public StencilTest setTestCondition(Condition condition, int mask, int ref) { 
+	public StencilTest setTestCondition(Condition condition, int ref, int mask) { 
 		return set(GLFace.Both, null, null, null, condition, mask, -1, ref); }
 	
 	public StencilTest setTestCondition(GLFace face, Condition condition) { return set(face, null, null, null, condition, -1, -1, -1); }
-	public StencilTest setTestCondition(GLFace face, Condition condition, int mask, int ref) { 
+	public StencilTest setTestCondition(GLFace face, Condition condition, int ref, int mask) { 
 		return set(face, null, null, null, condition, mask, -1, ref); }
 	
 	public StencilTest setWriteMask(int mask) { return set(GLFace.Both, null, null, null, null, -1, mask, -1); }
