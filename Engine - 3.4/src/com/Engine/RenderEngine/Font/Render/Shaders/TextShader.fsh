@@ -17,6 +17,7 @@ void main(void) {
 	float value = 1 - smoothstep(width, width + edge, dist);
 	
 	out_colour = colour * value;
+	// if(out_colour.a < .5) discard;
 	
 	// if(texCoord.w == 0) out_colour = vec4(0, 0, 1, 1);
 	// if(texCoord.w == 1) out_colour = vec4(0, 1, 0, 1);

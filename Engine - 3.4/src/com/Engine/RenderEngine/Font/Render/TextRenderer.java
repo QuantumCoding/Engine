@@ -4,22 +4,26 @@ import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glDrawElements;
 
-import org.lwjgl.util.vector.Matrix4f;
-
+import com.Engine.RenderEngine.Font.Render.Shaders.TextShader;
+import com.Engine.RenderEngine.GLFunctions.DepthTest;
 import com.Engine.RenderEngine.Shaders.Renderer;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Textures.Texture2D;
-import com.Engine.Util.Vectors.MatrixUtil;
 
 public class TextRenderer extends Renderer<TextMesh, TextRenderProperties, TextShader> {
+	private static final DepthTest DEPTH_TEST = DepthTest.checkOnly();
+	
 	public TextRenderer(Shader shader) {
 		super(shader);
 		usingFrustumCulling(false);
 	}
 	
 	public void prepareOpenGL() {
-		shader.bind();
-		shader.projectionMatrix.load(Shader.getProjectionMatrix());
+//		shader.bind();
+//		shader.projectionMatrix.load(Shader.getProjectionMatrix());
+		shader.prepOpenGL();
+		
+		DEPTH_TEST.enable();
 	}
 	
 	public void bindModel(TextMesh mesh) {
@@ -28,10 +32,7 @@ public class TextRenderer extends Renderer<TextMesh, TextRenderProperties, TextS
 	}
 
 	public void renderModel(TextMesh mesh, TextRenderProperties property) {
-		Matrix4f modelView = MatrixUtil.createModelViewMatrix(property.getTransform(), Shader.getViewMatrix());
-		shader.colour.load(property.getColour());
-		shader.modelViewMatrix.load(modelView);
-		
+		shader.prep(mesh, property);
 		glDrawElements(GL_TRIANGLES, mesh.getIndiceCount(), GL_UNSIGNED_INT, 0);
 	}
 

@@ -12,10 +12,12 @@ import javax.imageio.ImageIO;
 import com.Engine.Util.XML.XMLParser;
 import com.Engine.Util.XML.XMLTag;
 import com.Engine.RenderEngine.Font.Render.FontTexture;
-import com.Engine.RenderEngine.Font.Render.TextShader;
+import com.Engine.RenderEngine.Font.Render.Shaders.Text2DShader;
+import com.Engine.RenderEngine.Font.Render.Shaders.TextBillboardShader;
 
 public class Font {
-	public static final TextShader DefaultShader = new TextShader();
+	public static final TextBillboardShader BillboardShader = new TextBillboardShader();
+	public static final Text2DShader Text2DShader = new Text2DShader();
 	
 	private FontTexture texture;
 	private Character[] characters;
@@ -24,7 +26,7 @@ public class Font {
 	private boolean multiChaneled;
 	private int lineHeight;
 	
-	private TextShader shader;
+	private TextBillboardShader shader;
 	
 	private Font(XMLTag data, boolean usingMultiChanel, int lineHeight, FontTexture texture, int offset, Character... characters) {
 		this.texture = texture;
@@ -34,7 +36,7 @@ public class Font {
 		
 		this.lineHeight = lineHeight;
 		this.multiChaneled = usingMultiChanel;
-		this.shader = DefaultShader;
+		this.shader = BillboardShader;
 	}
 	
 	public static Font loadFont(InputStream font) {
@@ -122,10 +124,10 @@ public class Font {
 	public int getLineHeight() { return lineHeight; }
 	public boolean usingMultiChanel() { return multiChaneled; }
 	public FontTexture getTexture() { return texture; }
-	public TextShader getShader() { return shader; }
+	public TextBillboardShader getShader() { return shader; }
 
 	public void setTexture(FontTexture texture) { this.texture = texture; }
-	public void setShader(TextShader shader) { this.shader = shader; }
+	public void setShader(TextBillboardShader shader) { this.shader = shader; }
 	
 	public void cleanUp() { texture.cleanUp(); }
 }

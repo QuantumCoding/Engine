@@ -5,7 +5,7 @@ import java.util.ListIterator;
 import com.Engine.RenderEngine.Font.Layout.Line;
 import com.Engine.RenderEngine.Font.Layout.Word;
 import com.Engine.RenderEngine.Font.Render.TextMesh;
-import com.Engine.RenderEngine.Font.Render.TextShader;
+import com.Engine.RenderEngine.Font.Render.Shaders.TextBillboardShader;
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
@@ -22,6 +22,7 @@ public class TextMeshStitcher {
 		
 		float yScale = DEFUALT_LINE_HEIGHT / font.getLineHeight();
 		Vector2f scale = new Vector2f(yScale * aspectRatio, yScale).multiply(fontSize);
+		Vector2f maxDimentions = new Vector2f();
 		
 		int indiceIndex = 0, positionIndex = 0, texIndex = 0;
 		for(ListIterator<Line> lineIter = Line.create(message, font, scale, limit); lineIter.hasNext(); ) {
@@ -37,6 +38,9 @@ public class TextMeshStitcher {
 				calculateIndices(indices, indiceIndex, positionIndex);
 				calculateVertices(cursor, symbol, scale, positions, texCoords, positionIndex, texIndex);
 				
+				if(maxDimentions.x < positions[positionIndex + 0]) maxDimentions.x = positions[positionIndex + 0];
+				if(maxDimentions.y > positions[positionIndex + 3]) maxDimentions.y = positions[positionIndex + 3];
+				
 				indiceIndex += 6;
 				positionIndex += 8;
 				texIndex += 16;
@@ -44,17 +48,22 @@ public class TextMeshStitcher {
 				cursor.x += symbol.getAdvanceX();
 			}}
 			
+//			if(maxDimentions.x < cursor.x)
+//				maxDimentions.x = cursor.x;
+			
 			cursor.x  = 0;
 			cursor.y += font.getLineHeight();
+			
+//			maxDimentions.y = cursor.y;
 		}
 		
 		ModelData data = new ModelData(1, 10, new Vector3f());
 		
-		data.storeDataInAttributeList(TextShader.ATTRIBUTE_LOC_POSITIONS, 2, positions, false);
-		data.storeDataInAttributeList(TextShader.ATTRIBUTE_LOC_TEXCOORDS, 4, texCoords, false);
+		data.storeDataInAttributeList(TextBillboardShader.ATTRIBUTE_LOC_POSITIONS, 2, positions, false);
+		data.storeDataInAttributeList(TextBillboardShader.ATTRIBUTE_LOC_TEXCOORDS, 4, texCoords, false);
 		
 		data.loadIndicies(indices);
-		return new TextMesh(font, data);
+		return new TextMesh(font, maxDimentions.multiply(1, -1), data);
 	}
 	
 	private static void calculateIndices(int[] indices, int offset, int verticesOffset) {
