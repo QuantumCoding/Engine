@@ -9,6 +9,7 @@ import com.Engine.RenderEngine.Shaders.RenderProperties;
 import com.Engine.RenderEngine.Shaders.Renderer;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Util.Camera;
+import com.Engine.Util.Vectors.Vector3f;
 
 public abstract class InstanceRenderer<T extends IRenderableInstance<? super E>, E extends RenderProperties, S extends Shader> extends Renderer<T, E, S> {
 	protected HashMap<T, InstanceVBO> instanceVBOs;
@@ -19,8 +20,8 @@ public abstract class InstanceRenderer<T extends IRenderableInstance<? super E>,
 		instanceVBOs = new HashMap<>();
 	}
 
-	public boolean addModel(T model, E property, Camera camera) {
-		if(super.addModel(model, property, camera)) {
+	public boolean addModel(T model, E property) {
+		if(super.addModel(model, property)) {
 			if(!instanceVBOs.containsKey(model)) {
 				InstanceVBO vbo = new InstanceVBO(model.getInstanceLength(), model.getInstanceCount());
 				model.addInstanceAttributes(vbo);
@@ -33,7 +34,7 @@ public abstract class InstanceRenderer<T extends IRenderableInstance<? super E>,
 		return false;
 	}
 	
-	public void render() {
+	public void render(Camera camera) {
 		prepareOpenGL();
 		
 		for(Iterator<Entry<T, List<E>>> modelIter = renders.entrySet().iterator(); modelIter.hasNext(); ) {
@@ -41,7 +42,20 @@ public abstract class InstanceRenderer<T extends IRenderableInstance<? super E>,
 			T model = entry.getKey();
 			InstanceVBO vbo = instanceVBOs.get(model);
 			
-			prepInstanceVBO(vbo, model);
+			for(Iterator<E> iter = renders.get(model).iterator(); iter.hasNext();) {
+				E property = iter.next();
+				
+				if(super.usingFrustumCulling) {
+					Vector3f vertex = model.getModelData().getCenter();
+					float radius = model.getModelData().getRadius();
+					vertex = vertex.transform(property.getTransformMatrix());
+					
+					if(shouldCull(camera, vertex, radius)) continue;
+				}
+
+				prepInstanceVBO(vbo, model, property);
+			}
+			
 			vbo.prepVBO();
 			
 			bindModel(model);
@@ -54,7 +68,7 @@ public abstract class InstanceRenderer<T extends IRenderableInstance<? super E>,
 		revertOpenGL();
 	}
 	
-	public abstract void prepInstanceVBO(InstanceVBO instanceVBO, T model); 
+	public abstract void prepInstanceVBO(InstanceVBO instanceVBO, T model, E property); 
 	public abstract void renderInstance(InstanceVBO instanceVBO, T model); 
 
 	public void renderModel(T model, E properties) {

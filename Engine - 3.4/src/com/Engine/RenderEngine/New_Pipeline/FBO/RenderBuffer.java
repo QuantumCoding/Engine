@@ -1,27 +1,19 @@
 package com.Engine.RenderEngine.New_Pipeline.FBO;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL12.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL14.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL21.*;
+import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER;
 import static org.lwjgl.opengl.GL30.GL_RENDERBUFFER;
-import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL31.*;
-import static org.lwjgl.opengl.GL32.*;
-import static org.lwjgl.opengl.GL33.*;
-import static org.lwjgl.opengl.GL40.*;
-import static org.lwjgl.opengl.GL41.*;
-import static org.lwjgl.opengl.GL42.*;
-import static org.lwjgl.opengl.GL43.*;
-import static org.lwjgl.opengl.GL44.*;
+import static org.lwjgl.opengl.GL30.glBindRenderbuffer;
+import static org.lwjgl.opengl.GL30.glDeleteRenderbuffers;
+import static org.lwjgl.opengl.GL30.glFramebufferRenderbuffer;
+import static org.lwjgl.opengl.GL30.glGenRenderbuffers;
+import static org.lwjgl.opengl.GL30.glRenderbufferStorage;
+import static org.lwjgl.opengl.GL30.glRenderbufferStorageMultisample;
 
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO_Types.TargetFormat;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO_Types.TargetFormat.TargetLevel;
 
 public class RenderBuffer implements IRenderTarget {
+	private int origWidth, origHeight;
 	private int multiSampleCount;
 	private int width, height;
 	private int id;
@@ -34,8 +26,8 @@ public class RenderBuffer implements IRenderTarget {
 	
 	public RenderBuffer(int width, int height, int multiSampleCount) {
 		this.multiSampleCount = multiSampleCount;
-		this.width = width;
-		this.height = height;
+		this.origWidth = this.width = width;
+		this.origHeight = this.height = height;
 	
 		id = glGenRenderbuffers();
 	}
@@ -43,6 +35,12 @@ public class RenderBuffer implements IRenderTarget {
 	public void bind() { glBindRenderbuffer(GL_RENDERBUFFER, id); }
 	public static void unbind() { glBindRenderbuffer(GL_RENDERBUFFER, 0); }
 
+	public void resize(float scaleX, float scaleY) {
+		this.width = (int) (origWidth * scaleX); this.height = (int) (origHeight * scaleY);
+		TargetFormat cashe = format; format = null;
+		init(cashe, level);
+	}
+	
 	public RenderBuffer init(TargetFormat format, TargetLevel level) {
 		if(format == this.format && level == this.level) return this;
 		

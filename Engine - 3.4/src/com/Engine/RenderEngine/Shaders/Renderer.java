@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.Engine.Demo.SceneTester;
 import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.Util.Vectors.MatrixUtil;
 import com.Engine.Util.Vectors.Vector3f;
@@ -13,7 +14,7 @@ import com.Engine.Util.Vectors.Vector3f;
 public abstract class Renderer<T extends IRenderable<? super E>, E extends RenderProperties, S extends Shader> {
 	protected S shader;
 	protected HashMap<T, List<E>> renders;
-	private boolean usingFrustumCulling;
+	protected boolean usingFrustumCulling;
 	
 	@SuppressWarnings("unchecked")
 	public Renderer(Shader shader) {
@@ -22,17 +23,9 @@ public abstract class Renderer<T extends IRenderable<? super E>, E extends Rende
 		usingFrustumCulling = true;
 	}
 	
-	public boolean addModel(T model, E property, Camera camera) {
+	public boolean addModel(T model, E property) {
 		if(!isAcceptedShader(model.getShader())) 
 			throw new IllegalArgumentException("Models shader is not excepted by the " + this.getClass());
-		
-		if(usingFrustumCulling) {
-			Vector3f vertex = model.getModelData().getCenter();
-			float radius = model.getModelData().getRadius();
-			vertex = vertex.transform(property.getTransformMatrix());//modelView);
-			
-			if(shouldCull(camera, vertex, radius)) return false;
-		}
 		
 		if(!renders.containsKey(model)) {
 			renders.put(model, new LinkedList<>());
@@ -43,6 +36,7 @@ public abstract class Renderer<T extends IRenderable<? super E>, E extends Rende
 	}
 	
 	protected boolean shouldCull(Camera camera, Vector3f point, float radius) {
+		camera = SceneTester.camera;
 		Vector3f pos = point.subtract(camera.getPosition());
 		
 		Vector3f dot = new Vector3f(
@@ -69,7 +63,7 @@ public abstract class Renderer<T extends IRenderable<? super E>, E extends Rende
 		return false;
 	}
 	
-	public void render() {
+	public void render(Camera camera) {
 		prepareOpenGL();
 		
 		for(Iterator<Entry<T, List<E>>> modelIter = renders.entrySet().iterator(); modelIter.hasNext(); ) {
@@ -77,8 +71,19 @@ public abstract class Renderer<T extends IRenderable<? super E>, E extends Rende
 			T model = entry.getKey();
 			
 			bindModel(model);
-			for(Iterator<E> iter = entry.getValue().iterator(); iter.hasNext(); )
-				renderModel(model, iter.next());
+			for(Iterator<E> iter = entry.getValue().iterator(); iter.hasNext(); ) {
+				E property = iter.next();
+				
+				if(usingFrustumCulling) {
+					Vector3f vertex = model.getModelData().getCenter();
+					float radius = model.getModelData().getRadius();
+					vertex = vertex.transform(property.getTransformMatrix());//modelView);
+					
+					if(shouldCull(camera, vertex, radius)) continue;
+				}
+				
+				renderModel(model, property);
+			}
 			unbindModel(model);
 		}
 		

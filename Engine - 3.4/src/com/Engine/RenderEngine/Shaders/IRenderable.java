@@ -1,10 +1,9 @@
 package com.Engine.RenderEngine.Shaders;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
-import com.Engine.RenderEngine.Util.Camera;
 
 public interface IRenderable<T extends RenderProperties> {
-	public void render(T properties, Camera camera);
+	public void render(T properties);
 	
 	public Shader getShader();
 	public ModelData getModelData();

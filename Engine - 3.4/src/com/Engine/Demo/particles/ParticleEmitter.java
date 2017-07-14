@@ -1,4 +1,4 @@
-package com.Engine.Demo;
+package com.Engine.Demo.particles;
 
 import com.Engine.RenderEngine.Particles.Particle;
 import com.Engine.RenderEngine.Particles.ParticleManager;
@@ -29,9 +29,13 @@ public class ParticleEmitter {
 		while(elapsedTime >= emitionDelay) {
 			if(manager.getParticleCount() < ParticleManager.PARTICLE_CREATION_CAP) {
 				
+//				Particle particle = new Particle(position, (float) (Math.random() * 360),
+//						 Vector3f.random(.5f).add(0.5f), Vector3f.random(.5f).subtract(.25f),
+//						 new Vector3f(0, -3, 0).add(0, -2, 0), 2.5f, texture);
+				
 				Particle particle = new Particle(position, (float) (Math.random() * 360),
 						 Vector3f.random(.5f).add(0.5f), Vector3f.random(.5f).subtract(.25f),
-						 new Vector3f(0, -3, 0).add(0, -2, 0), 2.5f, texture);
+						 Vector3f.random(1).subtract(0.5f).addY(0.5f), (float) Math.random() * 1.5f, texture);
 				manager.addParticle(particle);
 				
 			} else {

@@ -7,6 +7,7 @@ import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glReadBuffer;
+import static org.lwjgl.opengl.GL11.glStencilMask;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL20.glDrawBuffers;
@@ -24,7 +25,9 @@ import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
 
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO_Types.Attachment;
+import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Window.Window;
+import com.Engine.Util.Vectors.MatrixUtil;
 
 public class FBO {
 	public static final class ScreenFBO extends FBO {
@@ -42,6 +45,8 @@ public class FBO {
 		public void screenResized(Window window) {
 			super.width = window.getWidth();
 			super.height = window.getHeight();
+			
+			Shader.setOrthographicMatrix(MatrixUtil.initOrthographicMatrix(0, super.width, super.height, 0, -1, 1));
 		}
 		
 		public void attach(IRenderTarget target, Attachment attachment, int index) { notifyType(); }
@@ -54,12 +59,25 @@ public class FBO {
 	public static final ScreenFBO SCREEN_FBO = new ScreenFBO();
 	
 //	------
+
+	private static FBO current;
+	private static boolean allowMasterAccess = true;
+	
+	public static void allowMasterAccess(boolean allow) { FBO.allowMasterAccess = allow; }
+	
+	public static void clear_bound() {
+		if(!allowMasterAccess) return;
+		current.clear();
+	}
+	
+//	------
 	
 	public static boolean FBOS_CAN_INITALISE_TARGETS = true;
 	
 	private IntBuffer drawBuffers;
 	private IRenderTarget[][] attachemnts;
 	private int multiSampleCount;
+	private float origWidth, origHeight;
 	private int width, height;
 	private int id;
 	
@@ -67,8 +85,8 @@ public class FBO {
 	
 	public FBO(int width, int height) { this(width, height, -1); }
 	public FBO(int width, int height, int multiSampleCount) {
-		this.width = width;
-		this.height = height;
+		this.origWidth = this.width = width;
+		this.origHeight = this.height = height;
 		this.multiSampleCount = multiSampleCount;
 		
 		if(isMultiSampled()) glEnable(GL_MULTISAMPLE);
@@ -104,6 +122,8 @@ public class FBO {
 		
 		else
 			glDrawBuffers(fbo.drawBuffers);
+		
+		FBO.current = fbo;
 	}
 	
 	public static void unbind() { unbind(GL_FRAMEBUFFER); }
@@ -112,7 +132,7 @@ public class FBO {
 	
 	protected static void unbind(int glTarget) { SCREEN_FBO.bind(glTarget); }
 	
-	public void clear() { glClear(bitMask); }
+	public void clear() { if((bitMask | GL_STENCIL_BUFFER_BIT) != 0) glStencilMask(~0); glClear(bitMask); }
 	
 	public void attach(IRenderTarget target, Attachment attachment) { attach(target, attachment, 0); }
 	public void attach(IRenderTarget target, Attachment attachment, int index) {
@@ -132,7 +152,7 @@ public class FBO {
 		
 		IRenderTarget[] array = attachemnts[attachment.ordinal()];
 		if(array == null) array = attachemnts[attachment.ordinal()] = new IRenderTarget[index + 1];
-		if(array.length < index) {
+		if(array.length < index + 1) {
 			IRenderTarget[] arrayExpanded = new IRenderTarget[index + 1];
 			System.arraycopy(array, 0, arrayExpanded, 0, array.length);
 			array = attachemnts[attachment.ordinal()] = arrayExpanded;
@@ -179,11 +199,22 @@ public class FBO {
 		return dest;
 	}
 	
+	public void resize(int width, int height) {
+		this.width = width; this.height = height;
+		
+		float scaleX = width / origWidth;
+		float scaleY = height / origHeight;
+		
+		for(IRenderTarget[] tagets : attachemnts)
+		if(tagets != null) for(IRenderTarget taget : tagets)
+			taget.resize(scaleX, scaleY);
+	}
+	
 	public void cleanUp() {
 		glDeleteFramebuffers(id);
 		
 		for(IRenderTarget[] tagets : attachemnts)
-		for(IRenderTarget taget : tagets)
+		if(tagets != null) for(IRenderTarget taget : tagets)
 			taget.cleanUp();
 	}
 

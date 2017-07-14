@@ -7,6 +7,7 @@ public interface IRenderTarget {
 	public void bind();
 	public default IRenderTarget init(TargetFormat format) { return init(format, TargetLevel.Default); }
 	public IRenderTarget init(TargetFormat format, TargetLevel level);
+	public void resize(float scaleX, float scaleY);
 	public void attach(int attachment);
 	
 	public TargetFormat getFormat();

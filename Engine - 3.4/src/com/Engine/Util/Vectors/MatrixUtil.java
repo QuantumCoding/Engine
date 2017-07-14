@@ -36,9 +36,9 @@ public class MatrixUtil {
 		matrix.m11 =  2/height;
 		matrix.m22 = -2/depth;
 		           
-		matrix.m03 = -(right + left)/width; 
-		matrix.m13 = -(top + bottom)/height;
-		matrix.m23 = -(far + near)/depth;   
+		matrix.m30 = -(right + left)/width; 
+		matrix.m31 = -(top + bottom)/height;
+		matrix.m32 = -(far + near)/depth;   
 		matrix.m33 = 1;                     
 
 		return matrix;

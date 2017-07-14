@@ -2,11 +2,10 @@ package com.Engine.RenderEngine.Shaders.Default;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
 import com.Engine.RenderEngine.Shaders.IRenderable;
+import com.Engine.RenderEngine.Shaders.RenderProperties;
 import com.Engine.RenderEngine.Shaders.Renderer;
 import com.Engine.RenderEngine.Shaders.Shader;
-import com.Engine.RenderEngine.Shaders.RenderProperties;
 import com.Engine.RenderEngine.Textures.Texture2D;
-import com.Engine.RenderEngine.Util.Camera;
 
 public class Model implements IRenderable<RenderProperties> {
 	protected ModelData modelData;
@@ -31,8 +30,8 @@ public class Model implements IRenderable<RenderProperties> {
 	
 	public void setTexture(Texture2D texture) { this.texture = texture; }
 	
-	public void render(RenderProperties property, Camera camera) {
-		renderer.addModel(this, property, camera);
+	public void render(RenderProperties property) {
+		renderer.addModel(this, property);
 	}
 	
 // --------------------------------------- Delegation Methods ------------------------------------------------------ \\

@@ -224,14 +224,17 @@ public abstract class Shader {
 	
 	protected static Matrix4f viewMatrix;
 	protected static Matrix4f projectionMatrix;
+	protected static Matrix4f orthographicMatrix;
 	protected static Vector3f skyColor;
 
 	public static Matrix4f getViewMatrix() { return viewMatrix; }
 	public static Matrix4f getProjectionMatrix() { return projectionMatrix; }
+	public static Matrix4f getOrthographicMatrix() { return orthographicMatrix; }
 	public static Vector3f getSkyColor() { return skyColor; }
 
 	public static void setViewMatrix(Matrix4f viewMatrix) { Shader.viewMatrix = viewMatrix; }
 	public static void setProjectionMatrix(Matrix4f projectionMatrix) { Shader.projectionMatrix = projectionMatrix; }
+	public static void setOrthographicMatrix(Matrix4f orthoMatrix) { Shader.orthographicMatrix = orthoMatrix; }
 	public static void setSkyColor(Vector3f skyColor) { Shader.skyColor = skyColor; }
 	
 	private static class ClassNode {

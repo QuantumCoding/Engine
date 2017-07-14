@@ -20,15 +20,14 @@ import com.Engine.Demo.Input.CameraMovement;
 import com.Engine.Demo.MultiRender.MultiModel;
 import com.Engine.Demo.MultiRender.MultiRenderProperties;
 import com.Engine.Demo.MultiRender.MultiShader;
+import com.Engine.Demo.particles.ParticleEmitter;
 import com.Engine.PhysicsEngine.Detection.Colliders.CollisionEllipse;
 import com.Engine.PhysicsEngine.Render.PhysicsRenderProperties;
 import com.Engine.PhysicsEngine.Render.PhysicsShader;
 import com.Engine.PhysicsEngine.Render.Sphere.SphereRender;
-import com.Engine.RenderEngine.RenderEngine;
 import com.Engine.RenderEngine.Font.Font;
 import com.Engine.RenderEngine.Font.TextMeshStitcher;
 import com.Engine.RenderEngine.Font.Render.TextMesh;
-import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
 import com.Engine.RenderEngine.GLFunctions.Condition;
 import com.Engine.RenderEngine.GLFunctions.GLFace;
 import com.Engine.RenderEngine.GLFunctions.StencilTest;
@@ -51,7 +50,6 @@ import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.RenderEngine.Window.Window;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
-import com.Engine.Util.Vectors.Vector4f;
 
 // https://open.gl/depthstencils
 
@@ -78,6 +76,7 @@ public class RenderTester {
 		Texture2D texture2 = new Texture2D(ImageIO.read(RenderTester.class.getResource("/textures/CubeMap.png")));
 		
 		Texture2D tableTexture = new Texture2D(ImageIO.read(RenderTester.class.getResource("/textures/tableTop.png")));
+		Texture2D tableInnerTexture = new Texture2D(ImageIO.read(RenderTester.class.getResource("/textures/tableBot.png")));
 		
 // --------------------------------------- Standard Models -------------------------------------------------- \\
 
@@ -86,6 +85,10 @@ public class RenderTester {
 		Model cubeModel = new Model(ModelLoader.loadOBJ("res/models/CubeSingle.obj"));
 		cubeModel.setShader(defaultShader);
 		cubeModel.setTexture(texture2);
+		
+		Model floorModel = new Model(ModelLoader.loadOBJ("res/models/CubeSingle.obj"));
+		floorModel.setShader(defaultShader);
+		floorModel.setTexture(texture2);
 
 		SphereRender sphereRender = new SphereRender(new CollisionEllipse(new Vector3f(cubeModel.getModelData().getRadius())), 30);
 		sphereRender.setShader(physicsShader);
@@ -96,11 +99,11 @@ public class RenderTester {
 		ParticleManager particleManager = new ParticleManager();
 		ParticleTexture particleTexture = ParticleTexture.getRegistry().registerTexture(4, RenderTester.class.getResource("/textures/ParticleD.png"));
 		ParticleTexture.getRegistry().compressTexture();
-		ParticleEmitter emitter = new ParticleEmitter(particleManager, new Vector3f(-2, 0, -2.5), particleTexture, 0.05f);
+		ParticleEmitter emitter = new ParticleEmitter(particleManager, new Vector3f(0, 2, -5), particleTexture, 0.05f);
 
 // ------------------------------------------- Text -------------------------------------------------- \\
 		
-		Font font = Font.loadFont(RenderEngine.class.getResourceAsStream("/fonts/ArialM.qFnt"));
+		Font font = Font.loadFont(RenderTester.class.getResourceAsStream("/fonts/ArialM.qFnt"));
 		TextMesh mesh = TextMeshStitcher.createMesh("THis is a TEST to see how long this thing can be :) 1928374650", 
 				font, 5, window.getAspectRatio(), new Vector2f(2.5f, .75f));
 		
@@ -181,6 +184,24 @@ public class RenderTester {
 			movement.update((float) window.getFrameTime());
 			followLight.setPosition(camera.getPosition());
 			rot += window.getFrameTime() * 250;
+		
+		// ---------------------------- ---------- ---------------------------- \\
+		//	--------------------------- Draw Floor ---------------------------- \\		
+		// ---------------------------- ---------- ---------------------------- \\
+			
+			mainRenderFBO.bindDraw();
+				defaultShader.bind();
+				defaultShader.loadLights(light, followLight);
+	
+//				glStencilMask(~0);
+				mainRenderFBO.clear();
+				
+				floorModel.setTexture(tableTexture);
+				floorModel.render(new DefaultRenderProperties(
+						new Transform(new Vector3f(0, -1, 0), null, new Vector3f(100).setY(0.01f)), 100, .01f, 0));
+				defaultShader.getRenderer().render(camera);
+	//			defaultShader.getRenderer().clear();
+			FBO.unbindDraw();
 			
 		// ---------------------------- ----------------- ---------------------------- \\
 		// ---------------------------- Render all Models ---------------------------- \\
@@ -188,15 +209,15 @@ public class RenderTester {
 			
 			cubeModel.setTexture(texture0);
 			cubeModel.render(new DefaultRenderProperties(
-					new Transform(new Vector3f(0, 0, -5), new Vector3f(90, 0, 0), new Vector3f(1)), 100, .95f, 0), camera);
+					new Transform(new Vector3f(0, 0, -5), new Vector3f(90, 0, 0), new Vector3f(1)), 100, .95f, 0));
 			
 			cubeModel.render(new DefaultRenderProperties(
-					new Transform(new Vector3f(0, 0, -8), new Vector3f(90, 0, 0), new Vector3f(1)), 100, .95f, 0), camera);
+					new Transform(new Vector3f(0, 0, -8), new Vector3f(90, 0, 0), new Vector3f(1)), 100, .95f, 0));
 			
 //			mesh.render(new TextRenderProperties(facingTransfrom, new Vector4f(.75f).setW(1)), camera);
-			multiModel.render(new MultiRenderProperties(facingTransfrom, texture0, texture1), camera);
+			multiModel.render(new MultiRenderProperties(facingTransfrom, texture0, texture1));
 			
-			particleManager.render(camera);
+			particleManager.render();
 
 			rotLight.setPosition(new Vector3f(3, 0, 0).rotate(new Vector3f(0, rot, 0)).add(0, 0, -5));
 
@@ -210,9 +231,9 @@ public class RenderTester {
 				
 				cubeTextureFBO.clear();
 				
-				multiShader.getRenderer().render();
-				defaultShader.getRenderer().render();
-				physicsShader.getRenderer().render();
+				multiShader.getRenderer().render(camera);
+				defaultShader.getRenderer().render(camera);
+				physicsShader.getRenderer().render(camera);
 //				Font.DefaultShader.getRenderer().render();
 //				ParticleManager.ParticleShader.getRenderer().render();
 			FBO.unbindDraw();
@@ -221,10 +242,12 @@ public class RenderTester {
 		// ---------------------------- ------------ ---------------------------- \\
 		// ---------------------------- Draw to Main ---------------------------- \\
 		// ---------------------------- ------------ ---------------------------- \\
+
+			floorModel.setTexture(tableInnerTexture);
 			
 			cubeModel.setTexture(cubeTexture2D);
 			cubeModel.render(new DefaultRenderProperties(
-					new Transform(rotLight.getPosition(), new Vector3f(90, 0, 0), new Vector3f(.1f)), 10, .5f, 0), camera);
+					new Transform(rotLight.getPosition(), new Vector3f(90, 0, 0), new Vector3f(.1f)), 10, .5f, 0));
 
 			mainRenderFBO.bindDraw();
 				defaultShader.bind();
@@ -236,20 +259,20 @@ public class RenderTester {
 				
 				mask.enable();
 					multiShader.scale(5f, 5f);
-					multiShader.getRenderer().render();
+					multiShader.getRenderer().render(camera);
 				self.enable();
 					multiShader.scale(5.5f, 5.5f);
-					multiShader.getRenderer().render();
+					multiShader.getRenderer().render(camera);
 				draw.enable();
 				
 				if(passedThrough) {
 					StencilTest.disable();
 				}
 				
-				defaultShader.getRenderer().render();
-				physicsShader.getRenderer().render();
-				Font.DefaultShader.getRenderer().render();
-				ParticleManager.ParticleShader.getRenderer().render();
+				defaultShader.getRenderer().render(camera);
+				physicsShader.getRenderer().render(camera);
+				Font.BillboardShader.getRenderer().render(camera);
+				ParticleManager.ParticleShader.getRenderer().render(camera);
 			
 				multiShader.scale(1f, 1f);
 				StencilTest.disable();
@@ -257,8 +280,8 @@ public class RenderTester {
 				defaultShader.getRenderer().clear();
 				cubeModel.setTexture(tableTexture);
 				cubeModel.render(new DefaultRenderProperties(
-						new Transform(new Vector3f(0, -1, 0), null, new Vector3f(100).setY(0.01f)), 100, .01f, 0), camera);
-				defaultShader.getRenderer().render();
+						new Transform(new Vector3f(0, -1, 0), null, new Vector3f(100).setY(0.01f)), 100, .01f, 0));
+				defaultShader.getRenderer().render(camera);
 			FBO.unbindDraw();
 			
 		// ---------------------------- -------------- ---------------------------- \\
@@ -281,12 +304,13 @@ public class RenderTester {
 			multiShader.getRenderer().clear();
 			defaultShader.getRenderer().clear();
 			physicsShader.getRenderer().clear();
-			Font.DefaultShader.getRenderer().clear();
+			Font.BillboardShader.getRenderer().clear();
 			ParticleManager.ParticleShader.getRenderer().clear();
 			
 			window.update();
 			
 			if(window.wasResized()) {
+				mainRenderFBO.resize(window.getWidth(), window.getHeight());
 				FBO.SCREEN_FBO.screenResized(window);
 				camera.setAspect(window.getAspectRatio());
 				camera.recalculate();
@@ -312,7 +336,7 @@ public class RenderTester {
 		multiShader.cleanUp();
 		defaultShader.cleanUp();
 		physicsShader.cleanUp();
-		Font.DefaultShader.cleanUp();
+		Font.BillboardShader.cleanUp();
 		ParticleManager.ParticleShader.cleanUp();
 
 		multiModel.cleanUp();
@@ -329,7 +353,7 @@ public class RenderTester {
 		Vector3f step = end.subtract(start).divide(steps);
 		for(int i = 0; i < steps; i ++) {
 			model.render(new PhysicsRenderProperties(
-					new Transform(start.add(step.multiply(i)), null, new Vector3f(0.01f)), color, false), camera);
+					new Transform(start.add(step.multiply(i)), null, new Vector3f(0.01f)), color, false));
 		}
 	}
 }

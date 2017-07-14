@@ -9,19 +9,31 @@ import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glDepthMask;
 import static org.lwjgl.opengl.GL31.glDrawElementsInstanced;
 
-import java.util.Iterator;
-
+import com.Engine.Demo.SceneTester;
 import com.Engine.RenderEngine.Instancing.InstanceRenderer;
 import com.Engine.RenderEngine.Instancing.InstanceVBO;
 import com.Engine.RenderEngine.Particles.Texture.ParticleTexture;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Textures.Texture2D;
+import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.Util.Vectors.MatrixUtil;
+import com.Engine.Util.Vectors.Vector3f;
 
 public class ParticleInstanceRenderer extends InstanceRenderer<ParticleInstanceRender, ParticleRenderProperties, ParticleShader> {
 	public ParticleInstanceRenderer(Shader shader) {
 		super(shader);
-		usingFrustumCulling(false);
+	}
+	
+	protected boolean shouldCull(Camera camera, Vector3f point, float radius) {
+		camera = SceneTester.camera;
+		
+		Vector3f pos = point.subtract(camera.getPosition());
+		float z = pos.dot(MatrixUtil.forward(camera.getViewMatrix()).multiply(-1));
+	
+		if(z > camera.getZFar() + radius || z < camera.getZNear() - radius)
+			return true;
+		
+		return false;
 	}
 	
 	protected void prepareOpenGL() {
@@ -30,19 +42,15 @@ public class ParticleInstanceRenderer extends InstanceRenderer<ParticleInstanceR
 		glDepthMask(false);
 	}
 	
-	public void prepInstanceVBO(InstanceVBO vbo, ParticleInstanceRender model) {
-		for(Iterator<ParticleRenderProperties> iter = renders.get(model).iterator(); iter.hasNext();) {
-			ParticleRenderProperties property = iter.next();
-			
-			if(property.usingAdditive()) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			
-			vbo.putAll(
-					property.getOffset1(), property.getOffset2(),
-					property.getTextureDivisor(), property.getBlend(),
-					MatrixUtil.createModelViewMatrix(property.getTransform(), Shader.getViewMatrix())
-				);
-		}
+	public void prepInstanceVBO(InstanceVBO vbo, ParticleInstanceRender model, ParticleRenderProperties property) {
+		if(property.usingAdditive()) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		else glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		
+		vbo.putAll(
+				property.getOffset1(), property.getOffset2(),
+				property.getTextureDivisor(), property.getBlend(),
+				MatrixUtil.createModelViewMatrix(property.getTransform(), Shader.getViewMatrix())
+			);
 	}
 	
 	public void bindModel(ParticleInstanceRender model) {

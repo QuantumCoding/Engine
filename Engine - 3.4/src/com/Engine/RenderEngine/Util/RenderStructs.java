@@ -84,6 +84,8 @@ public class RenderStructs {
 			transformMatrix = null; 
 			return this;
 		}
+		
+		public void forceMatrixRecalculation() { this.transformMatrix = null; }
 	}
 	
 	public static class Vertex {

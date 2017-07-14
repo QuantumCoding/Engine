@@ -1,7 +1,7 @@
 package com.Engine.RenderEngine.Particles;
 
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.Engine.RenderEngine.Particles.Render.ParticleInstanceRender;
@@ -13,7 +13,7 @@ import com.Engine.Util.Time;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class ParticleManager {
-	public static final int PARTICLE_CREATION_CAP = 10000;
+	public static final int PARTICLE_CREATION_CAP = 1_000;
 	public static final ParticleShader ParticleShader = new ParticleShader();
 	
 	private List<Particle> particles;
@@ -24,7 +24,7 @@ public class ParticleManager {
 	private static long sum;
 	
 	public ParticleManager() {
-		particles = new ArrayList<>();
+		particles = new LinkedList<>();
 		model = new ParticleInstanceRender(ParticleShader);
 	}
 	
@@ -47,11 +47,19 @@ public class ParticleManager {
 		ParticleSorter.sort(particles);
 		endTime = Time.getSystemTime();
 		
+		float last = Float.MAX_VALUE;
+		for(iterator = particles.iterator(); iterator.hasNext();) {
+			Particle particle = iterator.next();
+			if(particle.getDistance() > last) System.err.println("ERRORR");
+			last = particle.getDistance();
+		}
+		
 		sum += endTime - startTime;
 		avg = (double) sum / ++ count;
+//		System.out.println(avg);
 	}
 	
-	public void render(Camera camera) {
+	public void render() {
 		model = new ParticleInstanceRender(ParticleShader);
 		for(Particle particle : particles) {
 			float normalTime = particle.getElapsedTime() / particle.getTimeAlive();
@@ -67,7 +75,7 @@ public class ParticleManager {
 					particle.getTexture(), particle.usingAdditive(), index1, index2, blend
 				);
 			
-			model.render(properties, camera);
+			model.render(properties);
 		}
 	}
 }

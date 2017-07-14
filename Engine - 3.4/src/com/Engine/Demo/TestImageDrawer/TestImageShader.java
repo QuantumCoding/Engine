@@ -1,4 +1,4 @@
-package com.Engine.Demo;
+package com.Engine.Demo.TestImageDrawer;
 
 import com.Engine.RenderEngine.New_Pipeline.PostProcessing.ImageShader;
 import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;

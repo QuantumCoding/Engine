@@ -6,7 +6,6 @@ import com.Engine.PhysicsEngine.Render.PhysicsRenderProperties;
 import com.Engine.PhysicsEngine.Render.PhysicsShader;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.Shaders.Default.Model;
-import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.Util.Vectors.MatrixUtil;
 import com.Engine.Util.Vectors.Vector3f;
@@ -22,7 +21,7 @@ public class VectorModel {
 		top.setShader(shader);
 	}
 	
-	public static void renderVector(Vector3f vector, Vector3f translation, Vector3f color, Camera camera) {
+	public static void renderVector(Vector3f vector, Vector3f translation, Vector3f color) {
 		Vector3f vectorOrig = vector.clone();
 		
 		float magnitude = vector.length();
@@ -51,11 +50,11 @@ public class VectorModel {
 		
 		body.render(new PhysicsRenderProperties(transform,
 //				new Transform(translation, angle, new Vector3f(1, magnitude, 1)), 
-				color, true), camera);
+				color, true));
 		
 		top.render(new PhysicsRenderProperties(
 				new Transform(new Vector3f(0, magnitude, 0).rotate(angle).add(translation), angle, new Vector3f(1)), 
-				color.subtract(0.1f).capMin(0), true), camera);
+				color.subtract(0.1f).capMin(0), true));
 	}
 	
 	private static class MatrixTransform extends Transform {

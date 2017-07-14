@@ -3,7 +3,6 @@ package com.Engine.Demo.MultiRender;
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
 import com.Engine.RenderEngine.Shaders.IRenderable;
 import com.Engine.RenderEngine.Shaders.Shader;
-import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class MultiModel implements IRenderable<MultiRenderProperties> {
@@ -37,8 +36,8 @@ public class MultiModel implements IRenderable<MultiRenderProperties> {
 		renderer = (MultiRenderer) (this.shader = shader).getRenderer();
 	}
 
-	public void render(MultiRenderProperties properties, Camera camera) {
-		renderer.addModel(this, properties, camera);
+	public void render(MultiRenderProperties properties) {
+		renderer.addModel(this, properties);
 	}
 
 	public Shader getShader() { return shader; }
