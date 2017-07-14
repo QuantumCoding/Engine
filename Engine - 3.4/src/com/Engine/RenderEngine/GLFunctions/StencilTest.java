@@ -1,10 +1,12 @@
 package com.Engine.RenderEngine.GLFunctions;
 
 import static org.lwjgl.opengl.GL11.GL_DECR;
+import static org.lwjgl.opengl.GL11.GL_FRONT_FACE;
 import static org.lwjgl.opengl.GL11.GL_INCR;
 import static org.lwjgl.opengl.GL11.GL_INVERT;
 import static org.lwjgl.opengl.GL11.GL_KEEP;
 import static org.lwjgl.opengl.GL11.GL_REPLACE;
+import static org.lwjgl.opengl.GL11.GL_STENCIL_CLEAR_VALUE;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_FAIL;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_FUNC;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_PASS_DEPTH_FAIL;
@@ -14,7 +16,9 @@ import static org.lwjgl.opengl.GL11.GL_STENCIL_TEST;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_VALUE_MASK;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_WRITEMASK;
 import static org.lwjgl.opengl.GL11.GL_ZERO;
+import static org.lwjgl.opengl.GL11.glClearStencil;
 import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glFrontFace;
 import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL11.glIsEnabled;
 import static org.lwjgl.opengl.GL14.GL_DECR_WRAP;
@@ -30,28 +34,42 @@ import static org.lwjgl.opengl.GL20.glStencilFuncSeparate;
 import static org.lwjgl.opengl.GL20.glStencilMaskSeparate;
 import static org.lwjgl.opengl.GL20.glStencilOpSeparate;
 
+import com.Engine.RenderEngine.GLFunctions.CullFace.FaceWinding;
+
 public class StencilTest extends GL_Function {
 	private StencilSet back, front;
+	private FaceWinding winding;
+	private int clearValue;
 	
 	private StencilTest() { super(); }
+	private StencilTest(boolean skip) { super(skip); }
 	
 	public void push() {
 		back.push();
 		front.push();
+		
+		if(winding != null) 
+			glFrontFace(winding.getFunction());
+		glClearStencil(clearValue);
 	}
 
 	public void pull() {
 		StencilSet[] values = StencilSet.pull();
 		this.back = values[0];
 		this.front = values[1];
+		
+		clearValue = glGetInteger(GL_STENCIL_CLEAR_VALUE);
+		winding = FaceWinding.lookUp(glGetInteger(GL_FRONT_FACE));
 	}
 
 	protected int getGLCapablity() { return GL_STENCIL_TEST; }
 
 	public GL_Function clone() {
-		StencilTest test = new StencilTest();
+		StencilTest test = new StencilTest(true);
 			test.back = this.back;
 			test.front = this.front;
+			test.winding = this.winding;
+			test.clearValue = this.clearValue;
 		return test;
 	}
 	
@@ -85,6 +103,9 @@ public class StencilTest extends GL_Function {
 
 	public StencilTest setWriteMask(GLFace face, int mask) { return set(face, null, null, null, null, -1, mask, -1); }
 	public StencilTest enableWriteMask(GLFace face, boolean enable) { return set(face, null, null, null, null, -1, enable ? 0xFF : 0x00, -1); }
+	
+	public StencilTest setClearValue(int value) { this.clearValue = value; return this; }
+	public StencilTest setFrontFace(FaceWinding winding) { this.winding = winding; return this; }
 	
 	public StencilTest set(GLFace face, ValueModifier fail, ValueModifier depthFail, ValueModifier depthPass, 
 			Condition condition, int mask, int writeMask, int refValue

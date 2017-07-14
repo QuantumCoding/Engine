@@ -14,6 +14,6 @@ public enum GLFace {
 	
 	public static GLFace lookUp(int glValue) {
 		for(GLFace side : values()) if(side.glValue == glValue) return side;
-		throw new IllegalArgumentException(glValue + " is not a valid CullSide");
+		throw new IllegalArgumentException(glValue + " is not a valid GLFace");
 	}
 }

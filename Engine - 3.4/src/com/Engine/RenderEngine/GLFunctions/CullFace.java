@@ -11,13 +11,14 @@ import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL11.glIsEnabled;
 
 public class CullFace extends GL_Function {
-	private static final CullFace NORMAL_CW  = new CullFace().setCullFace(GLFace.Front).setFrontFace(FaceWinding.CW);
-	private static final CullFace NORMAL_CCW = new CullFace().setCullFace(GLFace.Front).setFrontFace(FaceWinding.CCW);
+	private static final CullFace NORMAL_CW  = new CullFace(true).setCullFace(GLFace.Back).setFrontFace(FaceWinding.CW);
+	private static final CullFace NORMAL_CCW = new CullFace(true).setCullFace(GLFace.Back).setFrontFace(FaceWinding.CCW);
 	
 	private GLFace cull;
 	private FaceWinding winding;
 		
 	private CullFace() { super(); }
+	private CullFace(boolean skip) { super(skip); }
 	
 	public void push() {
 		glCullFace(cull.getValue());
@@ -25,14 +26,22 @@ public class CullFace extends GL_Function {
 	}
 
 	public void pull() {
-		cull = GLFace.lookUp(glGetInteger(GL_CULL_FACE));
-		winding = FaceWinding.lookUp(glGetInteger(GL_FRONT_FACE));
+		try {
+			cull = GLFace.lookUp(glGetInteger(GL_CULL_FACE));
+			winding = FaceWinding.lookUp(glGetInteger(GL_FRONT_FACE));
+			
+		} catch(IllegalArgumentException e) {
+			System.err.println("Failed to Pull CullFace details from OpenGL\t|\t" + e);
+			
+			cull = GLFace.Front;
+			winding = FaceWinding.CCW;
+		}
 	}
 
 	protected int getGLCapablity() { return GL_CULL_FACE; }
 	
 	public CullFace clone() {
-		CullFace cull = new CullFace();
+		CullFace cull = new CullFace(true);
 			cull.cull = this.cull;
 			cull.winding = this.winding;
 		return cull;

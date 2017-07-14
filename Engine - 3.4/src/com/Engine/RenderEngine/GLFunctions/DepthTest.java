@@ -20,7 +20,7 @@ import java.nio.FloatBuffer;
 import org.lwjgl.BufferUtils;
 
 public class DepthTest extends GL_Function {
-	private static final DepthTest NORMAL = new DepthTest().setCondition(Condition.LessThen)
+	private static final DepthTest NORMAL = new DepthTest(true).setCondition(Condition.LessThen)
 			.setRange(0, 1).setClearValue(1).shouldWriting(true);
 	
 	private static final DepthTest CHECK_ONLY = NORMAL.clone().shouldWriting(false);
@@ -33,6 +33,7 @@ public class DepthTest extends GL_Function {
 	private float clearDepth;
 
 	private DepthTest() { super(); }
+	private DepthTest(boolean skip) { super(skip); }
 	
 	public void push() {
 		glDepthMask(enableWrite);
@@ -59,7 +60,7 @@ public class DepthTest extends GL_Function {
 	protected int getGLCapablity() { return GL_DEPTH_TEST; }
 
 	public DepthTest clone() {
-		DepthTest test = new DepthTest();
+		DepthTest test = new DepthTest(true);
 			test.condition = this.condition;
 			test.enableWrite = this.enableWrite;
 			test.nearVal = this.nearVal;

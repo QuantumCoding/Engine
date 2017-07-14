@@ -17,6 +17,7 @@ public class ScissorTest extends GL_Function {
 	private int x, y, width, height;
 	
 	private ScissorTest() { super(); }
+	private ScissorTest(boolean skip) { super(skip); }
 	
 	public void push() {
 		glScissor(x, y, width, height);
@@ -35,7 +36,7 @@ public class ScissorTest extends GL_Function {
 	public static void disable() { glDisable(GL_SCISSOR_TEST); }
 
 	public ScissorTest clone() {
-		ScissorTest test = new ScissorTest();	
+		ScissorTest test = new ScissorTest(true);	
 			test.x = this.x; test.y = this.y;
 			test.width = this.width;
 			test.height = test.height;
@@ -44,7 +45,7 @@ public class ScissorTest extends GL_Function {
 	
 	public static ScissorTest current() { return new ScissorTest(); }
 	public static ScissorTest viewport() { 
-		ScissorTest test = new ScissorTest();
+		ScissorTest test = new ScissorTest(true);
 		
 		SCISSOR_BOUNDS.clear();
 		glGetInteger(GL_VIEWPORT, SCISSOR_BOUNDS);

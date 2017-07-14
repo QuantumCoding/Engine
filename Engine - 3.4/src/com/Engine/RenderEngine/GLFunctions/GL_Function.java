@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL11.glEnable;
 
 public abstract class GL_Function {
 	protected GL_Function() { pull(); }
+	protected GL_Function(boolean skip) { }
 	
 	public abstract void push();
 	public abstract void pull();

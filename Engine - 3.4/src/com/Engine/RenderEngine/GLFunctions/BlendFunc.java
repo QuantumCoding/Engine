@@ -47,8 +47,8 @@ import com.Engine.RenderEngine.GLFunctions.BlendFunc.BlendOperator.FunctionSet;
 import com.Engine.Util.Vectors.Vector4f;
 
 public class BlendFunc extends GL_Function {
-	private static final BlendFunc ADDED_BLENDING = new BlendFunc().setMultipliers(SRC_Alpha, One);
-	private static final BlendFunc NORMAL_BLENDING = new BlendFunc().setMultipliers(SRC_Alpha, One_Minus_SRC_Alpha);
+	private static final BlendFunc ADDED_BLENDING = new BlendFunc(true).setMultipliers(SRC_Alpha, One);
+	private static final BlendFunc NORMAL_BLENDING = new BlendFunc(true).setMultipliers(SRC_Alpha, One_Minus_SRC_Alpha);
 
 	private static final FloatBuffer COLOUR_PULL = BufferUtils.createFloatBuffer(16);
 	
@@ -66,6 +66,12 @@ public class BlendFunc extends GL_Function {
 	private Vector4f constColor;
 	
 	private BlendFunc() { super(); }
+	private BlendFunc(boolean skip) { 
+		super(skip); 
+		multipliers = new MultiplierSet(One, One);
+		function = new FunctionSet(BlendOperator.Add);
+		constColor = new Vector4f(1);
+	}
 	
 	public void push() {
 		glBlendColor(constColor.x, constColor.y, constColor.z, constColor.w);
@@ -79,7 +85,6 @@ public class BlendFunc extends GL_Function {
 		COLOUR_PULL.clear();
 		glGetFloat(GL_BLEND_COLOR, COLOUR_PULL);
 		constColor = new Vector4f(COLOUR_PULL.get(), COLOUR_PULL.get(), COLOUR_PULL.get(), COLOUR_PULL.get());
-		System.out.println(constColor);
 		function = BlendOperator.pull();
 		multipliers = BlendMulti.pull();
 	}
@@ -87,7 +92,7 @@ public class BlendFunc extends GL_Function {
 	protected int getGLCapablity() { return GL_BLEND; }
 
 	public BlendFunc clone() {
-		BlendFunc func = new BlendFunc();
+		BlendFunc func = new BlendFunc(true);
 			func.function = this.function;
 			func.multipliers = this.multipliers;
 		return func;
