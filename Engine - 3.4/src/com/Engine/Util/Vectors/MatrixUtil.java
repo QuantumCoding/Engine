@@ -55,31 +55,37 @@ public class MatrixUtil {
 		return matrix;
 	}
 	
-	public static Matrix4f	initRotationMatrix(Vector4f quat) {
+	public static Matrix4f initRotationMatrix(float angle, Vector3f axis) {
+		angle = (float) Math.toRadians(angle);
+		float sin = (float) Math.sin(angle / 2);
+		return initRotationMatrix(new Vector4f((float) Math.cos(angle / 2), sin * axis.x, sin * axis.y, sin * axis.z));
+	}
+	
+	public static Matrix4f initRotationMatrix(Vector4f quat) {
 		Matrix4f matrix = new Matrix4f();
 		
-		float xy = quat.x * quat.y;
-		float xz = quat.x * quat.z;
-		float xw = quat.x * quat.w;
-		float yz = quat.y * quat.z;
-		float yw = quat.y * quat.w;
-		float zw = quat.z * quat.w;
+		float ai = quat.x * quat.y;
+		float aj = quat.x * quat.z;
+		float ak = quat.x * quat.w;
+		float ij = quat.y * quat.z;
+		float ik = quat.y * quat.w;
+		float jk = quat.z * quat.w;
 		
-		float xSq = quat.x * quat.x;
-		float ySq = quat.y * quat.y;
-		float zSq = quat.z * quat.z;
+		float iSq = quat.y * quat.y;
+		float jSq = quat.z * quat.z;
+		float kSq = quat.w * quat.w;
 		
-		matrix.m00 = 1 - 2 * (ySq + zSq);
-		matrix.m01 = 2 * (xy - zw);
-		matrix.m02 = 2 * (xz + yw);
+		matrix.m00 = 1 - 2 * (jSq + kSq);
+		matrix.m01 = 2 * (ij + ak);
+		matrix.m02 = 2 * (ik - aj);
 		
-		matrix.m10 = 2 * (xy + zw);
-		matrix.m11 = 1 - 2 * (xSq + zSq);
-		matrix.m12 = 2 * (yz - xw);
+		matrix.m10 = 2 * (ij - ak);
+		matrix.m11 = 1 - 2 * (iSq + kSq);
+		matrix.m12 = 2 * (jk + ai);
 		
-		matrix.m20 = 2 * (xz - yw);
-		matrix.m21 = 2 * (yz + xw);
-		matrix.m22 = 1 - 2 * (xSq + ySq);
+		matrix.m20 = 2 * (ik + aj);
+		matrix.m21 = 2 * (jk - ai);
+		matrix.m22 = 1 - 2 * (iSq + jSq);
 		
 		return matrix;
 	}
