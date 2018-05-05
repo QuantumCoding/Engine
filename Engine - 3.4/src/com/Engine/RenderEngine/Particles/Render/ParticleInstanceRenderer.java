@@ -9,7 +9,6 @@ import static org.lwjgl.opengl.GL11.glBlendFunc;
 import static org.lwjgl.opengl.GL11.glDepthMask;
 import static org.lwjgl.opengl.GL31.glDrawElementsInstanced;
 
-import com.Engine.Demo.SceneTester;
 import com.Engine.RenderEngine.Instancing.InstanceRenderer;
 import com.Engine.RenderEngine.Instancing.InstanceVBO;
 import com.Engine.RenderEngine.Particles.Texture.ParticleTexture;
@@ -22,11 +21,10 @@ import com.Engine.Util.Vectors.Vector3f;
 public class ParticleInstanceRenderer extends InstanceRenderer<ParticleInstanceRender, ParticleRenderProperties, ParticleShader> {
 	public ParticleInstanceRenderer(Shader shader) {
 		super(shader);
+		usingFrustumCulling(false);
 	}
 	
 	protected boolean shouldCull(Camera camera, Vector3f point, float radius) {
-		camera = SceneTester.camera;
-		
 		Vector3f pos = point.subtract(camera.getPosition());
 		float z = pos.dot(MatrixUtil.forward(camera.getViewMatrix()).multiply(-1));
 	

@@ -11,8 +11,6 @@ public abstract class TextShader extends Shader {
 	}
 	
 	protected void bindAttributies() {
-		bind();
-		
 		super.bindAttribute(ATTRIBUTE_LOC_POSITIONS, "position");
 		super.bindAttribute(ATTRIBUTE_LOC_TEXCOORDS, "texCoord_in");
 	}

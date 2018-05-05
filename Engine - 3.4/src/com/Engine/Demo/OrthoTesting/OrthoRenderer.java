@@ -1,7 +1,9 @@
 package com.Engine.Demo.OrthoTesting;
 
 import static org.lwjgl.opengl.GL11.GL_TRIANGLES;
+import static org.lwjgl.opengl.GL11.GL_TRIANGLE_STRIP;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
+import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glDrawElements;
 
 import com.Engine.RenderEngine.Shaders.Renderer;
@@ -25,7 +27,8 @@ public class OrthoRenderer extends Renderer<OrthoModel, OrthoRenderProperties, O
 
 	public void renderModel(OrthoModel model, OrthoRenderProperties properties) {
 		shader.transformationMatrix.load(properties.getTransformMatrix());
-		glDrawElements(GL_TRIANGLES, model.getIndiceCount(), GL_UNSIGNED_INT, 0);
+//		glDrawElements(GL_TRIANGLES, model.getIndiceCount(), GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	}
 
 	public void unbindModel(OrthoModel model) {

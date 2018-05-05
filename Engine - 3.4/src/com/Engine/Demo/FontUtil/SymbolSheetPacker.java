@@ -170,8 +170,7 @@ public class SymbolSheetPacker {
 		
 		public PageDrawer(SymbolSheetMetadata meta) {
 			this.meta = meta;
-			img = new BufferedImage(meta.width, meta.height, meta.useMultiChannel ? BufferedImage.TYPE_INT_ARGB :
-				BufferedImage.TYPE_BYTE_GRAY);
+			img = new BufferedImage(meta.width, meta.height, BufferedImage.TYPE_INT_ARGB);
 			shift = channel % 2 == 0 ? channel == 0 ? 2 * 8 : 0 : channel * 8;
 		}
 		
@@ -206,7 +205,7 @@ public class SymbolSheetPacker {
 				img.setRGB(imgX + x, imgY + y, rgb);
 			}}
 
-			x += symbol.width - meta.font.smeer / 2;
+			x += symbol.width - meta.font.smeer / 4;
 			return true;
 		}
 	}

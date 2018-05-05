@@ -3,6 +3,7 @@ package com.Engine.RenderEngine.Particles.Render;
 import com.Engine.RenderEngine.Instancing.IRenderableInstance;
 import com.Engine.RenderEngine.Instancing.InstanceVBO;
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
 import com.Engine.RenderEngine.Shaders.Renderer;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.Util.Vectors.Vector3f;
@@ -26,10 +27,10 @@ public class ParticleInstanceRender implements IRenderableInstance<ParticleRende
 	private static final ModelData PARTICLE_MODEL_DATA; static {
 		PARTICLE_MODEL_DATA = new ModelData(.5f, 1000, new Vector3f());
 		
-		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, false);
-		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, false);
+		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, BufferUsage.Static_Draw);
+		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, BufferUsage.Static_Draw);
 		
-		PARTICLE_MODEL_DATA.loadIndicies(INDICES);
+		PARTICLE_MODEL_DATA.loadIndices(INDICES);
 	}
 	
 	public static final int MAX_PARTICLE_COUNT = 5000;

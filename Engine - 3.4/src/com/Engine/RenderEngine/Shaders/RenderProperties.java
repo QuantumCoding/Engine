@@ -13,7 +13,7 @@ public abstract class RenderProperties {
 	}
 	
 	public RenderProperties(Transform transform) {
-		this.transform = transform;
+		this.transform = transform == null ? new Transform() : transform;
 	}
 
 	public void translate(Vector3f amount) { transform.translate(amount); }

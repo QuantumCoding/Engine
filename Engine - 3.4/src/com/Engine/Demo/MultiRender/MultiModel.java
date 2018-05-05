@@ -1,6 +1,7 @@
 package com.Engine.Demo.MultiRender;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
 import com.Engine.RenderEngine.Shaders.IRenderable;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.Util.Vectors.Vector3f;
@@ -23,10 +24,10 @@ public class MultiModel implements IRenderable<MultiRenderProperties> {
 	private static final ModelData MULTI_MODEL_DATA; static {
 		MULTI_MODEL_DATA = new ModelData(1, 1000, new Vector3f());
 		
-		MULTI_MODEL_DATA.storeDataInAttributeList(MultiShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, false);
-		MULTI_MODEL_DATA.storeDataInAttributeList(MultiShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, false);
+		MULTI_MODEL_DATA.storeDataInAttributeList(MultiShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, BufferUsage.Static_Draw);
+		MULTI_MODEL_DATA.storeDataInAttributeList(MultiShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, BufferUsage.Static_Draw);
 		
-		MULTI_MODEL_DATA.loadIndicies(INDICES);
+		MULTI_MODEL_DATA.loadIndices(INDICES);
 	}
 	
 	private MultiShader shader;

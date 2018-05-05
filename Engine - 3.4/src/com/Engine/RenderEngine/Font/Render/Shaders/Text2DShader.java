@@ -4,6 +4,7 @@ import com.Engine.RenderEngine.Font.Render.TextMesh;
 import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
 import com.Engine.RenderEngine.Font.Render.TextRenderer;
 import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
+import com.Engine.RenderEngine.Shaders.Uniforms.UniformFloat;
 import com.Engine.RenderEngine.Shaders.Uniforms.UniformMat4;
 import com.Engine.RenderEngine.Shaders.Uniforms.UniformTexture;
 import com.Engine.RenderEngine.Shaders.Uniforms.UniformVec4;
@@ -14,6 +15,8 @@ public class Text2DShader extends TextShader {
 	
 	@Uniform UniformMat4 orthographicMatrix;
 	@Uniform UniformMat4 transformationMatrix;
+
+	@Uniform UniformFloat lineHeight;
 
 	@Uniform UniformVec4 colour;
 	@Uniform UniformTexture texture0;
@@ -29,6 +32,7 @@ public class Text2DShader extends TextShader {
 	
 	public void prep(TextMesh mesh, TextRenderProperties property) {
 		transformationMatrix.load(property.getTransformMatrix());
+		lineHeight.load(mesh.getLineHeight());
 		colour.load(property.getColour());
 	}
 }

@@ -1,6 +1,7 @@
 package com.Engine.PhysicsEngine.Render.Octree;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Shaders.Default.Model;
 import com.Engine.Util.Vectors.Vector3f;
@@ -20,7 +21,7 @@ public class PhysicsPlaneRender extends Model {
 		
 		int[] ind = new int[] { 0, 1, 2 };
 		
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, data, false);
-		modelData.loadIndicies(ind);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, data, BufferUsage.Static_Draw);
+		modelData.loadIndices(ind);
 	}
 }

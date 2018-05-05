@@ -9,11 +9,11 @@ import java.util.zip.ZipInputStream;
 
 import javax.imageio.ImageIO;
 
-import com.Engine.Util.XML.XMLParser;
-import com.Engine.Util.XML.XMLTag;
 import com.Engine.RenderEngine.Font.Render.FontTexture;
 import com.Engine.RenderEngine.Font.Render.Shaders.Text2DShader;
 import com.Engine.RenderEngine.Font.Render.Shaders.TextBillboardShader;
+import com.Engine.Util.XML.XMLParser;
+import com.Engine.Util.XML.XMLTag;
 
 public class Font {
 	public static final TextBillboardShader BillboardShader = new TextBillboardShader();
@@ -68,7 +68,7 @@ public class Font {
 		boolean multiChanel = false;
 		XMLTag fontData = null;
 		ArrayList<Character> characters = new ArrayList<>();
-		int minId = -1, maxId = 0;
+		int minId = Integer.MAX_VALUE, maxId = 0;
 		
 		for(XMLTag root : tags) {
 			if(root.getName().equals("symbol_sheet")) {
@@ -88,13 +88,15 @@ public class Font {
 					characters.add(character);
 					
 					if(character.getCharCode() == 0xFFFD) continue;
-					if(minId == -1 || character.getCharCode() < minId) minId = character.getCharCode();
+					if(character.getCharCode() < minId) minId = character.getCharCode();
 					if(maxId < character.getCharCode()) maxId = character.getCharCode();
 				}
 				
 				characters.add(new Character.CharacterSpace((int) lineData.getProperty("spaceWidth")));
-				if(minId == -1 || Character.CharacterSpace.ASCII_SPACE < minId) minId = Character.CharacterSpace.ASCII_SPACE;
-				if(maxId < Character.CharacterSpace.ASCII_SPACE) maxId = Character.CharacterSpace.ASCII_SPACE;
+				characters.add(new Character.CharacterReturn((int) lineData.getProperty("lineHeight")));
+
+				if(Character.CharacterReturn.ASCII_RETURN < minId) minId = Character.CharacterReturn.ASCII_RETURN;
+				if(maxId < Character.CharacterReturn.ASCII_RETURN) maxId = Character.CharacterReturn.ASCII_RETURN;
 				break;
 			}
 		}

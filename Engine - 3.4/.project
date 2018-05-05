@@ -14,4 +14,33 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<filteredResources>
+		<filter>
+			<id>1510575284776</id>
+			<name>src/com/Engine/Demo</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-SceneTester*</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1510575284780</id>
+			<name>src/com/Engine/Demo</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-TestingUI*</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1501965291133</id>
+			<name>src/com/Engine/RenderEngine/GUI</name>
+			<type>30</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*</arguments>
+			</matcher>
+		</filter>
+	</filteredResources>
 </projectDescription>

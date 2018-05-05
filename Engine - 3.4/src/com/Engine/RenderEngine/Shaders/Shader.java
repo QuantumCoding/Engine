@@ -60,22 +60,21 @@ public abstract class Shader {
 			}
 		}
 		
+		vertexShaderId = loadShader(vsFilePath, GL_VERTEX_SHADER);
+		fragmentShaderId = loadShader(fsFilePath, GL_FRAGMENT_SHADER);
+		
 		programId = glCreateProgram();
 		
-		bind();
-			vertexShaderId = loadShader(vsFilePath, GL_VERTEX_SHADER);
-			fragmentShaderId = loadShader(fsFilePath, GL_FRAGMENT_SHADER);
+		glAttachShader(programId, vertexShaderId);
+		glAttachShader(programId, fragmentShaderId);
+
+		bindAttributies(); // Do not move
 	
-			glAttachShader(programId, vertexShaderId);
-			glAttachShader(programId, fragmentShaderId);
+		glLinkProgram(programId);			
+		glValidateProgram(programId);
 		
-			bindAttributies(); // Do not move
-		
-			glLinkProgram(programId);			
-			glValidateProgram(programId);
-		
-			bind();
-				initUniformLocations();
+		bind();
+			initUniformLocations();
 		unbind();
 	}
 	
@@ -176,13 +175,13 @@ public abstract class Shader {
 		glCompileShader(shaderId);
 		
 		if(glGetShaderi(shaderId, GL_COMPILE_STATUS) == GL_FALSE) {
-			System.err.println("Could not compile shader: \n" + glGetShaderInfoLog(shaderId, 1024));
+			System.err.println("Could not compile " + getClass().getSimpleName() + ": \n" + glGetShaderInfoLog(shaderId, 1024));
 		}
 		
 		return shaderId;
 	}
 	
-	public void bind() { glUseProgram(programId); }	
+	public void bind()  { glUseProgram(programId); }	
 	public static void unbind() { glUseProgram(0); }
 	
 	public int getProgramId() { return programId; }

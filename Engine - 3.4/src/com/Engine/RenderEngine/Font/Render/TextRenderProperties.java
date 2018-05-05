@@ -14,5 +14,7 @@ public class TextRenderProperties extends RenderProperties {
 	
 	public Vector4f getColour() { return colour; }
 	
+	public void setColour(Vector4f colour) { this.colour = colour; }
+	
 	public RenderProperties clone() { return new TextRenderProperties(getTransform(), colour); }
 }

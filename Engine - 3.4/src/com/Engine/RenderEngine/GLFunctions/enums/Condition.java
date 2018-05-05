@@ -1,4 +1,4 @@
-package com.Engine.RenderEngine.GLFunctions;
+package com.Engine.RenderEngine.GLFunctions.enums;
 
 import static org.lwjgl.opengl.GL11.GL_ALWAYS;
 import static org.lwjgl.opengl.GL11.GL_EQUAL;

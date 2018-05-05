@@ -6,7 +6,6 @@ import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_S;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_T;
-import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
 import static org.lwjgl.opengl.GL11.glTexImage2D;
 import static org.lwjgl.opengl.GL11.glTexParameteri;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
@@ -58,8 +57,9 @@ public class RenderTexture extends Texture implements IRenderTarget {
 		bind();
 			if(multiSampleCount > 0)
 				glTexImage2DMultisample(glType, multiSampleCount, format.getFormat(level), width, height, true);
-			else
-				glTexImage2D(glType, 0, format.getFormat(level), width, height, 0, format.getExternal(), GL_UNSIGNED_BYTE, (ByteBuffer) null);
+			else 
+				glTexImage2D(glType, 0, format.getFormat(level), width, height, 0, 
+						format.getExternal(), format.getStorageType(level), (ByteBuffer) null);
 		
 	        glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	        glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

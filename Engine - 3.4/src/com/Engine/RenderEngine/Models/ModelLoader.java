@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Util.RenderStructs.Vertex;
 import com.Engine.Util.Vectors.Vector2f;
@@ -104,7 +105,7 @@ public class ModelLoader {
 				indiciesArray[i] = indicies.get(i);	
 			
 			return loadModel(vertecies, texCoords, normals, indiciesArray, 
-					new boolean[]{false, false, false}, radius, 10000, center);
+					new BufferUsage[]{BufferUsage.Static_Draw, BufferUsage.Static_Draw, BufferUsage.Static_Draw}, radius, 10000, center);
 
 		} catch(IOException e) {
 			System.err.println("Failed to load Model from: " + filePath);
@@ -115,14 +116,14 @@ public class ModelLoader {
 	}
 	
 	public static ModelData loadModel(float[] vertices, float[] texCoords, float[] normals, int[] indicies,
-			boolean[] dynamic, float radius, float renderDistance, Vector3f center) {
+			BufferUsage[] usages, float radius, float renderDistance, Vector3f center) {
 		
 		ModelData modelData = new ModelData(radius, renderDistance, center);
 
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, vertices, dynamic[0]);
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_TEXCOORDS, 2, texCoords, dynamic[1]);
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_NORMALS, 3, normals, dynamic[2]);
-		modelData.loadIndicies(indicies);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, vertices, usages[0]);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_TEXCOORDS, 2, texCoords, usages[1]);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_NORMALS, 3, normals, usages[2]);
+		modelData.loadIndices(indicies);
 		
 		return modelData;
 	}

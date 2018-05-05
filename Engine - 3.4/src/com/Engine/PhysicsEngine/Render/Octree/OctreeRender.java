@@ -7,6 +7,7 @@ import com.Engine.PhysicsEngine.Detection.Octree;
 import com.Engine.PhysicsEngine.Detection.Octree.Node;
 import com.Engine.PhysicsEngine.Detection.Colliders.AABB;
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Shaders.Default.Model;
 import com.Engine.Util.Vectors.Vector3f;
@@ -37,8 +38,8 @@ public class OctreeRender extends Model {
 		for(int i = 0; i < indices.size(); i ++)
 			ind[i] = indices.get(i).intValue();
 		
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, data, false);
-		modelData.loadIndicies(ind);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, data, BufferUsage.Static_Draw);
+		modelData.loadIndices(ind);
 	}
 	
 	private void addNode(Node<?> node, HashMap<Vector3f, Integer> map, ArrayList<Vector3f> v, ArrayList<Integer> i) {

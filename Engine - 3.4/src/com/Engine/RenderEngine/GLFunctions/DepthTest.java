@@ -11,68 +11,82 @@ import static org.lwjgl.opengl.GL11.glDepthMask;
 import static org.lwjgl.opengl.GL11.glDepthRange;
 import static org.lwjgl.opengl.GL11.glDisable;
 import static org.lwjgl.opengl.GL11.glGetBoolean;
-import static org.lwjgl.opengl.GL11.glGetFloat;
-import static org.lwjgl.opengl.GL11.glGetInteger;
-import static org.lwjgl.opengl.GL11.glIsEnabled;
 
 import java.nio.FloatBuffer;
 
 import org.lwjgl.BufferUtils;
 
+import com.Engine.RenderEngine.GLFunctions.enums.Condition;
+
 public class DepthTest extends GL_Function {
-	private static final DepthTest NORMAL = new DepthTest(true).setCondition(Condition.LessThen)
-			.setRange(0, 1).setClearValue(1).shouldWriting(true);
+	private static final FloatBuffer DEPTH_VALUES = BufferUtils.createFloatBuffer(16);
+	private static final DepthTest CURRENT = new DepthTest(); static { CURRENT.syncGLState(); }
 	
+	private static final DepthTest NORMAL = new DepthTest()
+			.setCondition(Condition.LessThen)
+			.setRange(0, 1)
+			.setClearValue(1)
+		.shouldWriting(true);
 	private static final DepthTest CHECK_ONLY = NORMAL.clone().shouldWriting(false);
 
-	private static final FloatBuffer DEPTH_VALUES = BufferUtils.createFloatBuffer(16);
-	
 	private Condition condition;
 	private boolean enableWrite;
 	private float nearVal, farValue;
 	private float clearDepth;
 
-	private DepthTest() { super(); }
-	private DepthTest(boolean skip) { super(skip); }
+	private DepthTest() { }
+	private DepthTest(boolean enable) { super(enable); } 
 	
-	public void push() {
+	public void _push() {
 		glDepthMask(enableWrite);
 		glDepthFunc(condition.getValue());
 		glDepthRange(nearVal, farValue);
 		glClearDepth(clearDepth);
+		
+		CURRENT.enableWrite = enableWrite;
+		CURRENT.condition = condition;
+		CURRENT.nearVal = nearVal;
+		CURRENT.farValue = farValue;
+		CURRENT.clearDepth = clearDepth;
 	}
 
-	public void pull() {
+	public void _pull() {
 		if(DEPTH_VALUES == null) return;
 		
-		condition = Condition.lookUp(glGetInteger(GL_DEPTH_FUNC));
+		condition = Condition.lookUp(getInt(GL_DEPTH_FUNC));
 		enableWrite = glGetBoolean(GL_DEPTH_WRITEMASK);
 		
 		DEPTH_VALUES.clear();
-		glGetFloat(GL_DEPTH_RANGE, DEPTH_VALUES);
+		get(GL_DEPTH_RANGE, DEPTH_VALUES);
 		nearVal = DEPTH_VALUES.get(); farValue = DEPTH_VALUES.get();
 
 		DEPTH_VALUES.clear();
-		glGetFloat(GL_DEPTH_CLEAR_VALUE, DEPTH_VALUES);
+		get(GL_DEPTH_CLEAR_VALUE, DEPTH_VALUES);
 		clearDepth = DEPTH_VALUES.get();
 	}
 
-	protected int getGLCapablity() { return GL_DEPTH_TEST; }
-
-	public DepthTest clone() {
-		DepthTest test = new DepthTest(true);
-			test.condition = this.condition;
-			test.enableWrite = this.enableWrite;
-			test.nearVal = this.nearVal;
-			test.farValue = this.farValue;
-			test.clearDepth = this.clearDepth;
-		return test;
-	}
-
-	public static boolean isEnabled() { return glIsEnabled(GL_DEPTH_TEST); }
-	public static void disable() { glDisable(GL_DEPTH_TEST); }
+	protected DepthTest getLocalCashe() { return CURRENT; }
 	
-	public static DepthTest current() { return new DepthTest(); }
+	protected int getGLCapablity() { return GL_DEPTH_TEST; }
+	public DepthTest clone() { return (DepthTest) copyTo(new DepthTest()); }
+	
+	protected DepthTest _copyTo(GL_Function function) {
+		DepthTest depthTest = (DepthTest) function;
+			depthTest.enableWrite = this.enableWrite;
+			depthTest.condition = this.condition;    
+			depthTest.nearVal = this.nearVal;        
+			depthTest.farValue = this.farValue;      
+			depthTest.clearDepth = this.clearDepth;  
+		return depthTest;
+	}
+	
+	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_DEPTH_TEST); }
+	public static void disable() { glDisable(GL_DEPTH_TEST); }
+
+	public static DepthTest diabled() { return new DepthTest(false); }
+	public static DepthTest enabled() { return new DepthTest(true); }
+	
+	public static DepthTest current() { return new DepthTest(isEnabled()); }
 	public static DepthTest normal() { return NORMAL.clone(); }
 	public static DepthTest checkOnly() { return CHECK_ONLY.clone(); }
 

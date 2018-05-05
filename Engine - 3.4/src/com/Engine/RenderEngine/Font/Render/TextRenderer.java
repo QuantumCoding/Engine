@@ -18,12 +18,15 @@ public class TextRenderer extends Renderer<TextMesh, TextRenderProperties, TextS
 		usingFrustumCulling(false);
 	}
 	
+	DepthTest oldDepthTest;
+	
 	public void prepareOpenGL() {
 //		shader.bind();
 //		shader.projectionMatrix.load(Shader.getProjectionMatrix());
 		shader.prepOpenGL();
 		
-		DEPTH_TEST.enable();
+		oldDepthTest = DepthTest.current();
+		DEPTH_TEST.push();
 	}
 	
 	public void bindModel(TextMesh mesh) {
@@ -43,5 +46,6 @@ public class TextRenderer extends Renderer<TextMesh, TextRenderProperties, TextS
 	
 	public void revertOpenGL() {
 		Shader.unbind();
+		oldDepthTest.push();
 	}
 }

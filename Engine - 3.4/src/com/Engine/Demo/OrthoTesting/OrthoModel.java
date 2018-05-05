@@ -1,6 +1,7 @@
 package com.Engine.Demo.OrthoTesting;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
 import com.Engine.RenderEngine.Shaders.IRenderable;
 import com.Engine.RenderEngine.Shaders.Shader;
 
@@ -11,11 +12,11 @@ public class OrthoModel implements IRenderable<OrthoRenderProperties> {
 	
 	static {
 		MODEL_DATA.storeDataInAttributeList(OthoShader.ATTRIBUTE_LOC_POSITIONS, 2, new float[] {
-				-0.5f,  0.5f,	-0.5f, -0.5f,
+				-0.5f, -0.5f,	-0.5f,  0.5f,
 				 0.5f, -0.5f,	 0.5f,  0.5f,
-		}, false);
+		}, BufferUsage.Static_Draw);
 		
-		MODEL_DATA.loadIndicies(new int[] {
+		MODEL_DATA.loadIndices(new int[] {
 				0, 1, 2,	0, 2, 3 
 		});
 	}

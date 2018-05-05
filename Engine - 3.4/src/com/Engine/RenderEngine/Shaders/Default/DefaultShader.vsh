@@ -35,8 +35,10 @@ void main(void) {
 	
 	texCoordPass = (texCoord / numberOfRows) + offset;
 	surfaceNormal = (transformationMatrix * vec4(normal, 0.0)).xyz;
-	for(int i=0; i<LIGHT_COUNT; i++) {
+	
+	for(int i = 0; i < LIGHT_COUNT; i ++) {
 		toLightVector[i] = lightPosition[i] - worldPosition.xyz;
 	}
+	
 	toCameraVector = (inverse(viewMatrix) * vec4(0, 0, 0, 1)).xyz - worldPosition.xyz;
 }

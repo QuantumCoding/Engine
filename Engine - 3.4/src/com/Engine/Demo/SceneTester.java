@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.input.Keyboard;
 
 import com.Engine.Demo.Input.CameraMovement;
 import com.Engine.Demo.MultiRender.MultiModel;
@@ -20,6 +21,7 @@ import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
 import com.Engine.RenderEngine.GLFunctions.BlendFunc;
 import com.Engine.RenderEngine.GLFunctions.CullFace;
 import com.Engine.RenderEngine.GLFunctions.DepthTest;
+import com.Engine.RenderEngine.GUI.Shader.UIGraphics;
 import com.Engine.RenderEngine.Lights.Light;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
@@ -88,7 +90,7 @@ public class SceneTester {
 		ParticleManager particleManager = new ParticleManager();
 		ParticleTexture particleTexture = ParticleTexture.getRegistry().registerTexture(4, RenderTester.class.getResource("/textures/ParticleD.png"));
 		ParticleTexture.getRegistry().compressTexture();
-		ParticleEmitter emitter = new ParticleEmitter(particleManager, new Vector3f(0, 2, -5), particleTexture, 0.025f);
+		ParticleEmitter emitter = new ParticleEmitter(particleManager, new Vector3f(0, 2, -5), particleTexture, 0.05f);
 		particleTexture.setAdditvieBlending(true);
 
 // ------------------------------------------- Text -------------------------------------------------- \\
@@ -97,8 +99,8 @@ public class SceneTester {
 		TextMesh mesh = TextMeshStitcher.createMesh("THis is a TEST to see how long this thing can be :) 1928374650", 
 				font, 5, window.getAspectRatio(), new Vector2f(2.5f, .75f));
 		
-		TextMesh mesh2D = TextMeshStitcher.createMesh("Bottom of the Screen! It Can also Be Centered", 
-				font, 16f * 1/TextMeshStitcher.DEFUALT_LINE_HEIGHT, window.getAspectRatio(), new Vector2f(window.getWidth() / 3, -1));
+		TextMesh mesh2D = TextMeshStitcher.createMesh("Bottom of the Screen!", 
+				font, 16f * 1/TextMeshStitcher.DEFUALT_LINE_HEIGHT, window.getAspectRatio(), new Vector2f(window.getWidth() / 3 * 2, -1));
 		
 		mesh2D.setShader(Font.Text2DShader);
 		
@@ -134,6 +136,8 @@ public class SceneTester {
 		BlendFunc defaultBlend = BlendFunc.normal();
 		
 // ------------------------------------------ Loop --------------------------------------------------- \\
+		
+		Keyboard.enableRepeatEvents(true);
 		
 		float time = 0;
 		double frameTimeAvg = 0.0;
@@ -205,17 +209,20 @@ public class SceneTester {
 //						new Vector4f(.75f, .6f, .1f, 1)));
 //				mesh2D.render(new TextRenderProperties(new Transform(new Vector3f(window.getWidth() / 2, window.getHeight() / 2, 1), null, new Vector3f(1)), 
 //						new Vector4f(.95f, .3f, .1f, 1)));
-				mesh2D.render(new TextRenderProperties(new Transform(
-						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight() - mesh2D.getSize().y, .5), 
-						null, 
-						new Vector3f(1, -1, 1)), 
-						new Vector4f(.75f, .6f, .1f, 1)));
+//				mesh2D.render(new TextRenderProperties(new Transform(
+//						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight(), .5), 
+//						null, 
+//						new Vector3f(1, 1, 1)), 
+//						new Vector4f(.75f, .6f, .1f, 1)));
 //				scene.render(camera, /*mesh.getShader().getRenderer(),*/ mesh2D.getShader().getRenderer());
 				
-				orthoModel.render(new OrthoRenderProperties(new Transform(
-						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight() - mesh2D.getSize().y, .5).add(new Vector3f(mesh2D.getSize(), 0).divide(2)), 
-						null, new Vector3f(mesh2D.getSize(), 1))));
+//				orthoModel.render(new OrthoRenderProperties(new Transform(
+//						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight() - mesh2D.getSize().y, .5).add(new Vector3f(mesh2D.getSize(), 0).divide(2)), 
+//						null, new Vector3f(mesh2D.getSize(), 1))));
 				scene.render(camera, OrthoModel.RENDERER, mesh2D.getShader().getRenderer());
+				
+//				UIModel.drawRect(100, 100, 250, 250);
+//				scene.render(camera, UIModel.RENDERER);
 				
 				defaultCull.enable();
 				scene.render(camera, ParticleManager.ParticleShader.getRenderer());
@@ -293,6 +300,7 @@ public class SceneTester {
 			mesh2D.getShader().getRenderer().clear();
 			ParticleManager.ParticleShader.getRenderer().clear();
 			OrthoModel.RENDERER.clear();
+			UIGraphics.RENDERER.clear();
 			
 			window.update();
 			

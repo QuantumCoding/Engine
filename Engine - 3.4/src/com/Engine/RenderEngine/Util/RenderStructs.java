@@ -34,29 +34,36 @@ public class RenderStructs {
 		public Vector3f getRotation() { return rotation; }
 		public Vector3f getScale() { return scale; }
 
-		public void translate(Vector3f amount) { translation = translation.add(amount); transformMatrix = null; }
-		public void rotate(Vector3f amount) { rotation = rotation.add(amount); transformMatrix = null; }
-		public void scale(Vector3f amount) { scale = scale.add(amount); transformMatrix = null; }
+		public Transform translate(Vector3f amount) { return setTranslation(translation.add(amount)); }
+		public Transform rotate(Vector3f amount)  { return setRotation(rotation.add(amount)); }
+		public Transform scale(Vector3f amount) { return setScale(scale.add(amount)); }
 		
-		public void setTranslation(Vector3f translation) {
+		public Transform setTranslation(Vector3f translation) {
+			if(this.translation.equalTo(translation)) return this;
 			this.translation = translation;
 			transformMatrix = null; 
+			return this;
 		}
 
-		public void setRotation(Vector3f rotation) {
+		public Transform setRotation(Vector3f rotation) {
+			if(this.rotation.equalTo(rotation)) return this;
 			this.rotation = rotation;
 			transformMatrix = null; 
+			return this;
 		}
 
-		public void setScale(Vector3f scale) {
+		public Transform setScale(Vector3f scale) {
+			if(this.scale.equalTo(scale)) return this;
 			this.scale = scale;
 			transformMatrix = null; 
+			return this;
 		}	
 		
-		public void transformBy(Transform other) {
+		public Transform transformBy(Transform other) {
 			translate(other.getTranslation());
 			rotate(other.getRotation());
 			scale(other.getScale());
+			return this;
 		}
 		
 		public Transform clone() {

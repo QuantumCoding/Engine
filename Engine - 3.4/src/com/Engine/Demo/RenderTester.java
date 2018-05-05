@@ -25,13 +25,15 @@ import com.Engine.PhysicsEngine.Detection.Colliders.CollisionEllipse;
 import com.Engine.PhysicsEngine.Render.PhysicsRenderProperties;
 import com.Engine.PhysicsEngine.Render.PhysicsShader;
 import com.Engine.PhysicsEngine.Render.Sphere.SphereRender;
+import com.Engine.PhysicsEngine.Render.Vector.VectorModel;
 import com.Engine.RenderEngine.Font.Font;
 import com.Engine.RenderEngine.Font.TextMeshStitcher;
 import com.Engine.RenderEngine.Font.Render.TextMesh;
-import com.Engine.RenderEngine.GLFunctions.Condition;
-import com.Engine.RenderEngine.GLFunctions.GLFace;
+import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
 import com.Engine.RenderEngine.GLFunctions.StencilTest;
 import com.Engine.RenderEngine.GLFunctions.StencilTest.ValueModifier;
+import com.Engine.RenderEngine.GLFunctions.enums.Condition;
+import com.Engine.RenderEngine.GLFunctions.enums.GLFace;
 import com.Engine.RenderEngine.Lights.Light;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
@@ -50,11 +52,24 @@ import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.RenderEngine.Window.Window;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
+import com.Engine.Util.Vectors.Vector4f;
 
 // https://open.gl/depthstencils
 
 public class RenderTester {
 	public static void main(String[] args) throws IOException, LWJGLException {
+//		VectorModel.renderVector(new Vector3f(-1, 1, 1), new Vector3f(), new Vector3f(1, .5, 0));
+//		VectorModel.renderVector(new Vector3f(0, 0, 1), new Vector3f(), new Vector3f(1, .5, 0));
+//		VectorModel.renderVector(new Vector3f(0, 0, -1), new Vector3f(), new Vector3f(1, .5, 0));
+		
+//		for(int x = -2; x <= 2; x ++) {
+//		for(int y = -2; y <= 2; y ++) {
+//		for(int z = -2; z <= 2; z ++) {
+//			VectorModel.renderVector(new Vector3f(x, y, z), new Vector3f(), new Vector3f(1, .5, 0));
+//		}}}
+//		
+//		System.exit(0);
+		
 		Window window = new Window();
 		window.initDisplay(600, 600, false);
 		window.setFPS(120);
@@ -93,6 +108,8 @@ public class RenderTester {
 		SphereRender sphereRender = new SphereRender(new CollisionEllipse(new Vector3f(cubeModel.getModelData().getRadius())), 30);
 		sphereRender.setShader(physicsShader);
 		
+		VectorModel.init(physicsShader);
+		
 
 // ------------------------------------------- Particles -------------------------------------------------- \\
 		
@@ -130,15 +147,18 @@ public class RenderTester {
 
 // ------------------------------------------ Stencil Test --------------------------------------------------- \\
 		
-		StencilTest mask = StencilTest.current().setTestCondition(Condition.Never).setFailOp(GLFace.Front, Incress);
-		StencilTest self = StencilTest.current().enableWriteMask(false).setTestCondition(Condition.Equal, 0, 0xFF);
-		StencilTest draw = StencilTest.current().enableWriteMask(false).setTestCondition(Condition.NotEqual, 0, 0xFF);
+		StencilTest mask = StencilTest.enabled().enableWriteMask(true).setTestCondition(Condition.Never).setFailOp(GLFace.Front, Incress);
+		StencilTest self = StencilTest.enabled().enableWriteMask(false).setTestCondition(Condition.Equal, 0, 0xFF);
+		StencilTest draw = StencilTest.enabled().enableWriteMask(false).setTestCondition(Condition.NotEqual, 0, 0xFF);
 		
 		boolean passedThrough = false;
 		boolean wasLastOnFront = true;
 		float lastZ = 0;
 
 // ------------------------------------------ Loop --------------------------------------------------- \\
+
+		Vector3f v = new Vector3f(5, 0, 0);
+		double sum = 0;
 		
 		double frameTimeAvg = 0.0;
 		int frameAvgCounter = 0;	
@@ -159,7 +179,8 @@ public class RenderTester {
 		    
 			Transform facingTransfrom = new Transform(new Vector3f(0, 2, -3), null, null);
 			
-
+			sum += window.getFrameTime(); sum %= 36;
+			v = new Vector3f(5, 0, 0).rotate(new Vector3f(0, 360 * sum, 10 * sum));
 		// ----------------------------- ------------ ---------------------------- \\
 		//	---------------------------- Stencil Swap ---------------------------- \\		
 	    // ----------------------------- ------------ ---------------------------- \\
@@ -188,7 +209,9 @@ public class RenderTester {
 		// ---------------------------- ---------- ---------------------------- \\
 		//	--------------------------- Draw Floor ---------------------------- \\		
 		// ---------------------------- ---------- ---------------------------- \\
-			
+
+			mesh.render(new TextRenderProperties(null, new Vector4f(1, 0, 0, 1)));
+
 			mainRenderFBO.bindDraw();
 				defaultShader.bind();
 				defaultShader.loadLights(light, followLight);
@@ -257,13 +280,13 @@ public class RenderTester {
 				mainRenderFBO.clear();
 				
 				
-				mask.enable();
+				mask.push();
 					multiShader.scale(5f, 5f);
 					multiShader.getRenderer().render(camera);
-				self.enable();
+				self.push();
 					multiShader.scale(5.5f, 5.5f);
 					multiShader.getRenderer().render(camera);
-				draw.enable();
+				draw.push();
 				
 				if(passedThrough) {
 					StencilTest.disable();
@@ -271,12 +294,19 @@ public class RenderTester {
 				
 				defaultShader.getRenderer().render(camera);
 				physicsShader.getRenderer().render(camera);
-				Font.BillboardShader.getRenderer().render(camera);
 				ParticleManager.ParticleShader.getRenderer().render(camera);
 			
 				multiShader.scale(1f, 1f);
 				StencilTest.disable();
 				
+				VectorModel.renderVector(v, new Vector3f(), new Vector3f(1, .5, 0));
+				VectorModel.renderVector(new Vector3f(0, 5, 0), new Vector3f(0, 2, -3).add(-2.5f, -2.5f, 0), new Vector3f(1, .5, 0));
+				VectorModel.renderVector(new Vector3f(-5, 0, 0), new Vector3f(0, 2, -3).add(-2.5f, -2.5f, 0), new Vector3f(1, .5, 0));
+//				VectorModel.renderVector(new Vector3f(1, 0, 0).add(v), new Vector3f(), new Vector3f(1, .5, 0));
+//				VectorModel.renderVector(new Vector3f(0, 1, 0).add(v), new Vector3f(), new Vector3f(0, .5, 1));
+//				VectorModel.renderVector(new Vector3f(0, 0, 1).add(v), new Vector3f(), new Vector3f(.5, 0, 1));
+				physicsShader.getRenderer().render(camera);
+
 				defaultShader.getRenderer().clear();
 				cubeModel.setTexture(tableTexture);
 				cubeModel.render(new DefaultRenderProperties(
@@ -304,6 +334,7 @@ public class RenderTester {
 			multiShader.getRenderer().clear();
 			defaultShader.getRenderer().clear();
 			physicsShader.getRenderer().clear();
+			Font.Text2DShader.getRenderer().clear();
 			Font.BillboardShader.getRenderer().clear();
 			ParticleManager.ParticleShader.getRenderer().clear();
 			

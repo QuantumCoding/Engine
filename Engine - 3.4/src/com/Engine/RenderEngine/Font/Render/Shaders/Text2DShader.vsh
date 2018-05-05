@@ -8,7 +8,10 @@ out vec4 texCoord;
 uniform mat4 transformationMatrix;
 uniform mat4 orthographicMatrix;
 
+uniform float lineHeight;
+
 void main(void) {
-	gl_Position = orthographicMatrix * transformationMatrix * vec4(position, 0.0, 1.0);
+	vec2 filpedPos = vec2(position.x, -position.y - lineHeight);
+	gl_Position = orthographicMatrix * transformationMatrix * vec4(filpedPos, 0.0, 1.0);
 	texCoord = texCoord_in;
 }

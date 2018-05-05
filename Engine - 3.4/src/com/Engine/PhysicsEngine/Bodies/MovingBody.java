@@ -71,21 +71,23 @@ public class MovingBody extends PhysicsBody {
 				IntersectionResult result = results.next();
 	
 				Vector3f resultSpaceVelocity = MatrixUtil.rotateScale(result.getResultSpace(), velocity);
-				Vector3f newPosition = resultSpaceVelocity.multiply((result.getDistance()) / resultSpaceVelocity.length());
+				Vector3f newPosition = resultSpaceVelocity.multiply(result.getDistance() / resultSpaceVelocity.length());
 				Vector3f planeNormal = newPosition.subtract(result.getPoint()).normalize();
 				
+				planeNormal = result.triangle.getNormal();
+				
+				// Checks to see if Body has already collided with this Plane
 				if(collidedNormals.contains(planeNormal)) continue;
 				collidedNormals.add(planeNormal);
-				
-				System.out.println(planeNormal);
-//				System.out.println(MatrixUtil.rotateScale(result.getInverseResultSpace(), planeNormal));
-				
+
 				Vector3f nnewPosition = newPosition.transform(result.getInverseResultSpace());
 				nnewPosition = nnewPosition.multiply(PRECISION).truncate().divide(PRECISION);
 				setPosition(nnewPosition);
 				
-				Vector3f resultSpaceNormal = planeNormal.multiply(planeNormal.dot(resultSpaceVelocity));
-				Vector3f normal = MatrixUtil.rotateScale(result.getInverseResultSpace(), resultSpaceNormal);
+//				Vector3f resultSpaceNormal = planeNormal.multiply(planeNormal.dot(resultSpaceVelocity));
+//				Vector3f normal = MatrixUtil.rotateScale(result.getInverseResultSpace(), resultSpaceNormal);
+				
+				Vector3f normal = planeNormal.multiply(planeNormal.dot(velocity));
 				normal = normal.multiply(PRECISION).truncate().divide(PRECISION);
 				
 				velocity = velocity.subtract(normal);
@@ -98,6 +100,8 @@ public class MovingBody extends PhysicsBody {
 			break;
 		} while(true);
 		netNormal = netNormal.multiply(PRECISION).truncate().divide(PRECISION).lock();
+		
+		System.out.println(netNormal);
 		
 		Vector3f friction = new Vector3f();
 		Vector3f normalNetNormal = netNormal.normalize();
@@ -132,12 +136,12 @@ public class MovingBody extends PhysicsBody {
 //		velocity = velocity.subtract(airResistance);
 		velocity = velocity.multiply(PRECISION).truncate().divide(PRECISION);
 
-//		System.out.println("Friction:  " + friction);
-//		System.out.println("Normal:    " + netNormal);
-//		System.out.println("Start Vel: " + startingVelocity);
-//		System.out.println("Final Vel:  " + velocity);
-//		System.out.println("Net Force: " + netForce);
-//		System.out.println();
+		System.out.println("Friction:  " + friction);
+		System.out.println("Normal:    " + netNormal);
+		System.out.println("Start Vel: " + startingVelocity);
+		System.out.println("Final Vel:  " + velocity);
+		System.out.println("Net Force: " + netForce);
+		System.out.println();
 		
 //		if(velocity.abs().z > top.z) top.z = velocity.abs().z;
 //		System.out.println("Top Speed:  " + top.z);

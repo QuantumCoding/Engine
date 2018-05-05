@@ -1,6 +1,5 @@
 package com.Engine.RenderEngine.New_Pipeline.FBO;
 
-import static org.lwjgl.opengl.GL11.GL_BACK;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
@@ -28,6 +27,7 @@ import com.Engine.RenderEngine.New_Pipeline.FBO.FBO_Types.Attachment;
 import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Window.Window;
 import com.Engine.Util.Vectors.MatrixUtil;
+import com.Engine.Util.Vectors.Vector2f;
 
 public class FBO {
 	public static final class ScreenFBO extends FBO {
@@ -36,10 +36,7 @@ public class FBO {
 			
 			super.id = 0;
 			super.bitMask = GL_COLOR_BUFFER_BIT; 
-			
-			super.drawBuffers = BufferUtils.createIntBuffer(1);
-			super.drawBuffers.put(GL_BACK);
-			super.drawBuffers.flip();
+			super.drawBuffers = null;
 		}
 		
 		public void screenResized(Window window) {
@@ -69,6 +66,8 @@ public class FBO {
 		if(!allowMasterAccess) return;
 		current.clear();
 	}
+	
+	public static FBO current() { return current; }
 	
 //	------
 	
@@ -120,8 +119,10 @@ public class FBO {
 			if(index < 0) glReadBuffer(GL_COLOR_ATTACHMENT0); 
 			else glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
 		
-		else
+		else if(fbo != SCREEN_FBO)
 			glDrawBuffers(fbo.drawBuffers);
+
+		//else glDrawBuffers(GL_FRONT);
 		
 		FBO.current = fbo;
 	}
@@ -220,6 +221,7 @@ public class FBO {
 
 	public int getWidth() { return width; }
 	public int getHeight() { return height; }
+	public Vector2f getSize() { return new Vector2f(width, height); }
 
 	public float getAspect() { return (float) width / height; }
 	

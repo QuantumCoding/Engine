@@ -19,9 +19,6 @@ import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_SRC_COLOR;
 import static org.lwjgl.opengl.GL11.GL_ZERO;
 import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glGetFloat;
-import static org.lwjgl.opengl.GL11.glGetInteger;
-import static org.lwjgl.opengl.GL11.glIsEnabled;
 import static org.lwjgl.opengl.GL14.GL_BLEND_COLOR;
 import static org.lwjgl.opengl.GL14.GL_BLEND_DST_ALPHA;
 import static org.lwjgl.opengl.GL14.GL_BLEND_DST_RGB;
@@ -47,6 +44,8 @@ import com.Engine.RenderEngine.GLFunctions.BlendFunc.BlendOperator.FunctionSet;
 import com.Engine.Util.Vectors.Vector4f;
 
 public class BlendFunc extends GL_Function {
+	private static final BlendFunc CURRENT = new BlendFunc(); static { CURRENT.syncGLState(); }
+	
 	private static final BlendFunc ADDED_BLENDING = new BlendFunc(true).setMultipliers(SRC_Alpha, One);
 	private static final BlendFunc NORMAL_BLENDING = new BlendFunc(true).setMultipliers(SRC_Alpha, One_Minus_SRC_Alpha);
 
@@ -61,47 +60,69 @@ public class BlendFunc extends GL_Function {
 	// Example:	 Src * src.alpha   +    Dst * (1 - src.alpha)
 	//			   SRC_Aplha      Add	 One_Minus_SRC_Alpha
 	
-	private FunctionSet function;
-	private MultiplierSet multipliers;
-	private Vector4f constColor;
-	
-	private BlendFunc() { super(); }
-	private BlendFunc(boolean skip) { 
-		super(skip); 
+	private FunctionSet function = new FunctionSet(BlendOperator.Add);
+	private MultiplierSet multipliers = new MultiplierSet(BlendMulti.One, BlendMulti.Zero);
+	private Vector4f constColor = new Vector4f(1);
+
+	private BlendFunc() { }
+	private BlendFunc(boolean enabled) { super(enabled); }
+	private BlendFunc(int index, boolean enabled) { 
+		super(index, enabled);
+		
 		multipliers = new MultiplierSet(One, One);
 		function = new FunctionSet(BlendOperator.Add);
 		constColor = new Vector4f(1);
 	}
 	
-	public void push() {
+	public BlendFunc withIndex(int index) { return (BlendFunc) super.withIndex(index); }
+	
+	public void _push() {
 		glBlendColor(constColor.x, constColor.y, constColor.z, constColor.w);
 		function.push();
 		multipliers.push();
+		
+		CURRENT.constColor = constColor;
+		
+		CURRENT.function.RGB_func = function.RGB_func;
+		CURRENT.function.ALPHA_func = function.ALPHA_func;
+		
+		CURRENT.multipliers.SRC_RGB_multi = multipliers.SRC_RGB_multi;
+		CURRENT.multipliers.DST_RGB_multi = multipliers.DST_RGB_multi;
+		CURRENT.multipliers.SRC_ALPHA_multi = multipliers.SRC_ALPHA_multi;
+		CURRENT.multipliers.DST_ALPHA_multi = multipliers.DST_ALPHA_multi;
 	}
 
-	public void pull() {
+	public void _pull() {
 		if(COLOUR_PULL == null) return;
 		
 		COLOUR_PULL.clear();
-		glGetFloat(GL_BLEND_COLOR, COLOUR_PULL);
+		get(GL_BLEND_COLOR, COLOUR_PULL);
 		constColor = new Vector4f(COLOUR_PULL.get(), COLOUR_PULL.get(), COLOUR_PULL.get(), COLOUR_PULL.get());
-		function = BlendOperator.pull();
-		multipliers = BlendMulti.pull();
+		function = BlendOperator.pull(this);
+		multipliers = BlendMulti.pull(this);
 	}
+
+	protected BlendFunc getLocalCashe() { return CURRENT; }
 
 	protected int getGLCapablity() { return GL_BLEND; }
-
-	public BlendFunc clone() {
-		BlendFunc func = new BlendFunc(true);
-			func.function = this.function;
-			func.multipliers = this.multipliers;
-		return func;
+	public BlendFunc clone() { return (BlendFunc) copyTo(new BlendFunc()); }
+	
+	protected BlendFunc _copyTo(GL_Function function) {
+		BlendFunc blendFunc = (BlendFunc) function;
+			blendFunc.constColor = this.constColor;
+			blendFunc.function = this.function;
+			blendFunc.multipliers = this.multipliers;
+		return blendFunc;
 	}
-
-	public static boolean isEnabled() { return glIsEnabled(GL_BLEND); }
+	
+	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_BLEND); }
 	public static void disable() { glDisable(GL_BLEND); }
 	
-	public static BlendFunc current() { return new BlendFunc(); }
+	public static BlendFunc diabled() { return new BlendFunc(false); }
+	public static BlendFunc enabled() { return new BlendFunc(true); }
+	
+	public static BlendFunc current() { return new BlendFunc(isEnabled()); }
+	
 	public static BlendFunc additive() { return ADDED_BLENDING.clone(); }
 	public static BlendFunc normal() { return NORMAL_BLENDING.clone(); }
 	
@@ -177,12 +198,12 @@ public class BlendFunc extends GL_Function {
 			);}
 		}
 		
-		private static MultiplierSet pull() {
+		private static MultiplierSet pull(BlendFunc func) {
 			return new MultiplierSet(
-				lookUp(glGetInteger(GL_BLEND_SRC_RGB)),
-				lookUp(glGetInteger(GL_BLEND_DST_RGB)),
-				lookUp(glGetInteger(GL_BLEND_SRC_ALPHA)),
-				lookUp(glGetInteger(GL_BLEND_DST_ALPHA))
+				lookUp(func.getInt(GL_BLEND_SRC_RGB)),
+				lookUp(func.getInt(GL_BLEND_DST_RGB)),
+				lookUp(func.getInt(GL_BLEND_SRC_ALPHA)),
+				lookUp(func.getInt(GL_BLEND_DST_ALPHA))
 			);
 		}
 	}
@@ -216,10 +237,10 @@ public class BlendFunc extends GL_Function {
 			void push() { glBlendEquationSeparate(RGB_func.glValue, ALPHA_func.glValue); }
 		}
 		
-		private static FunctionSet pull() {
+		private static FunctionSet pull(BlendFunc func) {
 			return new FunctionSet(
-				lookUp(glGetInteger(GL_BLEND_EQUATION_RGB)), 
-				lookUp(glGetInteger(GL_BLEND_EQUATION_ALPHA))
+				lookUp(func.getInt(GL_BLEND_EQUATION_RGB)), 
+				lookUp(func.getInt(GL_BLEND_EQUATION_ALPHA))
 			);
 		}
 	}
