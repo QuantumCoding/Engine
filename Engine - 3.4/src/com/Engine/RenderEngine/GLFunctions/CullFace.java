@@ -50,8 +50,8 @@ public class CullFace extends GL_Function {
 	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_CULL_FACE); }
 	public static void disable() { glDisable(GL_CULL_FACE); }
 
-	public static CullFace diabled() { return new CullFace(false); }
-	public static CullFace enabled() { return new CullFace(true); }
+	public static CullFace blankDiabled() { return new CullFace(false); }
+	public static CullFace blankEnabled() { return new CullFace(true); }
 	
 	public static CullFace current() { return new CullFace(isEnabled()); }
 	public static CullFace cw() { return NORMAL_CW.clone(); }

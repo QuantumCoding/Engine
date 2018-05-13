@@ -147,9 +147,9 @@ public class RenderTester {
 
 // ------------------------------------------ Stencil Test --------------------------------------------------- \\
 		
-		StencilTest mask = StencilTest.enabled().enableWriteMask(true).setTestCondition(Condition.Never).setFailOp(GLFace.Front, Incress);
-		StencilTest self = StencilTest.enabled().enableWriteMask(false).setTestCondition(Condition.Equal, 0, 0xFF);
-		StencilTest draw = StencilTest.enabled().enableWriteMask(false).setTestCondition(Condition.NotEqual, 0, 0xFF);
+		StencilTest mask = StencilTest.blankEnabled().enableWriteMask(true).setTestCondition(Condition.Never).setFailOp(GLFace.Front, Incress);
+		StencilTest self = StencilTest.blankEnabled().enableWriteMask(false).setTestCondition(Condition.Equal, 0, 0xFF);
+		StencilTest draw = StencilTest.blankEnabled().enableWriteMask(false).setTestCondition(Condition.NotEqual, 0, 0xFF);
 		
 		boolean passedThrough = false;
 		boolean wasLastOnFront = true;

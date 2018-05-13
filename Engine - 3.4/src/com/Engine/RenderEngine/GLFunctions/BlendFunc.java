@@ -19,6 +19,8 @@ import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_SRC_COLOR;
 import static org.lwjgl.opengl.GL11.GL_ZERO;
 import static org.lwjgl.opengl.GL11.glDisable;
+import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glIsEnabled;
 import static org.lwjgl.opengl.GL14.GL_BLEND_COLOR;
 import static org.lwjgl.opengl.GL14.GL_BLEND_DST_ALPHA;
 import static org.lwjgl.opengl.GL14.GL_BLEND_DST_RGB;
@@ -34,6 +36,11 @@ import static org.lwjgl.opengl.GL14.glBlendFuncSeparate;
 import static org.lwjgl.opengl.GL20.GL_BLEND_EQUATION_ALPHA;
 import static org.lwjgl.opengl.GL20.GL_BLEND_EQUATION_RGB;
 import static org.lwjgl.opengl.GL20.glBlendEquationSeparate;
+import static org.lwjgl.opengl.GL30.glDisablei;
+import static org.lwjgl.opengl.GL30.glEnablei;
+import static org.lwjgl.opengl.GL30.glIsEnabledi;
+import static org.lwjgl.opengl.GL40.glBlendEquationSeparatei;
+import static org.lwjgl.opengl.GL40.glBlendFuncSeparatei;
 
 import java.nio.FloatBuffer;
 
@@ -41,6 +48,7 @@ import org.lwjgl.BufferUtils;
 
 import com.Engine.RenderEngine.GLFunctions.BlendFunc.BlendMulti.MultiplierSet;
 import com.Engine.RenderEngine.GLFunctions.BlendFunc.BlendOperator.FunctionSet;
+import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
 import com.Engine.Util.Vectors.Vector4f;
 
 public class BlendFunc extends GL_Function {
@@ -59,47 +67,93 @@ public class BlendFunc extends GL_Function {
 	// Function: Src * multi  (operation) Dst * multi
 	// Example:	 Src * src.alpha   +    Dst * (1 - src.alpha)
 	//			   SRC_Aplha      Add	 One_Minus_SRC_Alpha
-	
-	private FunctionSet function = new FunctionSet(BlendOperator.Add);
-	private MultiplierSet multipliers = new MultiplierSet(BlendMulti.One, BlendMulti.Zero);
-	private Vector4f constColor = new Vector4f(1);
 
-	private BlendFunc() { }
-	private BlendFunc(boolean enabled) { super(enabled); }
-	private BlendFunc(int index, boolean enabled) { 
-		super(index, enabled);
-		
-		multipliers = new MultiplierSet(One, One);
-		function = new FunctionSet(BlendOperator.Add);
-		constColor = new Vector4f(1);
+	private Vector4f constColor;
+	private BlendLayer[] blendLayers;
+	private BlendLayer defaultValues;
+
+	private BlendFunc() { init(); }
+	private BlendFunc(boolean enabled) { super(enabled); init(); defaultValues.enabled = enabled; }
+	
+	private void init() {
+		if(constColor == null) constColor = new Vector4f(1);
+		if(defaultValues == null) defaultValues = new BlendLayer();
+		if(blendLayers == null) blendLayers = new BlendLayer[FBO.MAX_DRAW_BUFFERS];
 	}
 	
-	public BlendFunc withIndex(int index) { return (BlendFunc) super.withIndex(index); }
+	public void push() { _push(); }
 	
-	public void _push() {
+	protected void _push() {
 		glBlendColor(constColor.x, constColor.y, constColor.z, constColor.w);
-		function.push();
-		multipliers.push();
+		CURRENT.constColor.x = constColor.x;	CURRENT.constColor.y = constColor.y;
+		CURRENT.constColor.z = constColor.z;	CURRENT.constColor.w = constColor.w;
 		
-		CURRENT.constColor = constColor;
+		defaultValues.push();
+		defaultValues.copyTo(CURRENT.defaultValues);
 		
-		CURRENT.function.RGB_func = function.RGB_func;
-		CURRENT.function.ALPHA_func = function.ALPHA_func;
-		
-		CURRENT.multipliers.SRC_RGB_multi = multipliers.SRC_RGB_multi;
-		CURRENT.multipliers.DST_RGB_multi = multipliers.DST_RGB_multi;
-		CURRENT.multipliers.SRC_ALPHA_multi = multipliers.SRC_ALPHA_multi;
-		CURRENT.multipliers.DST_ALPHA_multi = multipliers.DST_ALPHA_multi;
+		for(int i = 0; i < blendLayers.length; i ++) {
+			if(blendLayers[i] == null) {
+				CURRENT.blendLayers[i] = null;
+				continue;
+			}
+			
+			blendLayers[i].pushToLayer(i);
+			blendLayers[i].copyTo(CURRENT.blendLayers[i]);
+		}
 	}
 
-	public void _pull() {
+	protected void _pull() {
 		if(COLOUR_PULL == null) return;
 		
 		COLOUR_PULL.clear();
 		get(GL_BLEND_COLOR, COLOUR_PULL);
 		constColor = new Vector4f(COLOUR_PULL.get(), COLOUR_PULL.get(), COLOUR_PULL.get(), COLOUR_PULL.get());
-		function = BlendOperator.pull(this);
-		multipliers = BlendMulti.pull(this);
+
+		defaultValues.pull();
+		for(int i = 0; i < blendLayers.length; i ++) {
+			BlendLayer layer = new BlendLayer(); 
+			layer.pullFromLayer(i);
+			
+			blendLayers[i] = defaultValues.isSame(layer) ? null : layer;
+		}
+	}
+	
+	public BlendFunc setMultipliers(BlendMulti src, BlendMulti dst) { return setMultipliers(src, dst, src, dst); }
+	public BlendFunc setMultipliersRGB(BlendMulti src, BlendMulti dst) { return setMultipliers(src, dst, null, null); }
+	public BlendFunc setMultipliersAlpha(BlendMulti src, BlendMulti dst) { return setMultipliers(null, null, src, dst); }
+	
+	public BlendFunc setMultipliers(BlendMulti src, BlendMulti dst, BlendMulti srcA, BlendMulti dstA) {
+		defaultValues.setMultipliers(src, dst, srcA, dstA);
+		return this;
+	}
+	
+	public BlendFunc setMultipliers(int layer, BlendMulti src, BlendMulti dst) { return setMultipliers(layer, src, dst, src, dst); }
+	public BlendFunc setMultipliersRGB(int layer, BlendMulti src, BlendMulti dst) { return setMultipliers(layer, src, dst, null, null); }
+	public BlendFunc setMultipliersAlpha(int layer, BlendMulti src, BlendMulti dst) { return setMultipliers(layer, null, null, src, dst); }
+	
+	public BlendFunc setMultipliers(int layer, BlendMulti src, BlendMulti dst, BlendMulti srcA, BlendMulti dstA) {
+		if(blendLayers[layer] == null) blendLayers[layer] = defaultValues.clone();
+		blendLayers[layer].setMultipliers(src, dst, srcA, dstA);
+		return this;
+	}
+	
+	public BlendFunc setOperator(BlendOperator op) { return setOperator(op, op); }
+	public BlendFunc setOperatorRGB(BlendOperator op) { return setOperator(op, null); }
+	public BlendFunc setOperatorAlpha(BlendOperator op) { return setOperator(null, op); }
+	
+	public BlendFunc setOperator(BlendOperator rgbOp, BlendOperator alphaOp) {
+		defaultValues.setOperator(rgbOp, alphaOp);
+		return this;
+	}
+	
+	public BlendFunc setOperator(int layer, BlendOperator op) { return setOperator(layer, op, op); }
+	public BlendFunc setOperatorRGB(int layer, BlendOperator op) { return setOperator(layer, op, null); }
+	public BlendFunc setOperatorAlpha(int layer, BlendOperator op) { return setOperator(layer, null, op); }
+	
+	public BlendFunc setOperator(int layer,  BlendOperator rgbOp, BlendOperator alphaOp) {
+		if(blendLayers[layer] == null) blendLayers[layer] = defaultValues.clone();
+		blendLayers[layer].setOperator(rgbOp, alphaOp);	
+		return this;
 	}
 
 	protected BlendFunc getLocalCashe() { return CURRENT; }
@@ -110,44 +164,111 @@ public class BlendFunc extends GL_Function {
 	protected BlendFunc _copyTo(GL_Function function) {
 		BlendFunc blendFunc = (BlendFunc) function;
 			blendFunc.constColor = this.constColor;
-			blendFunc.function = this.function;
-			blendFunc.multipliers = this.multipliers;
+			blendFunc.defaultValues = this.defaultValues;
+			blendFunc.blendLayers = this.blendLayers;
 		return blendFunc;
 	}
 	
-	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_BLEND); }
+	public static boolean isEnabled() { return CURRENT.defaultValues.enabled; } //glIsEnabled(GL_BLEND); }
 	public static void disable() { glDisable(GL_BLEND); }
 	
-	public static BlendFunc diabled() { return new BlendFunc(false); }
-	public static BlendFunc enabled() { return new BlendFunc(true); }
+	public static boolean isEnabled(int layer) { 
+		return CURRENT.blendLayers[layer] == null ? isEnabled() : CURRENT.blendLayers[layer].enabled; }
+	public static void disable(int layer) { glDisable(GL_BLEND); }
+	
+	public static BlendFunc blankDiabled() { return new BlendFunc(false); }
+	public static BlendFunc	blankEnabled() { return new BlendFunc(true); }
 	
 	public static BlendFunc current() { return new BlendFunc(isEnabled()); }
 	
 	public static BlendFunc additive() { return ADDED_BLENDING.clone(); }
 	public static BlendFunc normal() { return NORMAL_BLENDING.clone(); }
 	
-	public BlendFunc setMultipliers(BlendMulti src, BlendMulti dst) { return setMultipliers(src, dst, src, dst); }
-	public BlendFunc setMultipliersRGB(BlendMulti src, BlendMulti dst) { return setMultipliers(src, dst, null, null); }
-	public BlendFunc setMultipliersAlpha(BlendMulti src, BlendMulti dst) { return setMultipliers(null, null, src, dst); }
-	
-	public BlendFunc setMultipliers(BlendMulti src, BlendMulti dst, BlendMulti srcA, BlendMulti dstA) {
-		if(src != null) multipliers.SRC_RGB_multi = src;	
-		if(dst != null) multipliers.DST_RGB_multi = dst;
-		if(srcA != null) multipliers.SRC_ALPHA_multi = srcA;	
-		if(dstA != null) multipliers.DST_ALPHA_multi = dstA;
+	private class BlendLayer {
+		private boolean enabled = false;
+		private FunctionSet function = new FunctionSet(BlendOperator.Add);
+		private MultiplierSet multipliers = new MultiplierSet(SRC_Alpha, One);
 		
-		return this;
-	}
-	
-	public BlendFunc setOperator(BlendOperator op) { return setOperator(op, op); }
-	public BlendFunc setOperatorRGB(BlendOperator op) { return setOperator(op, null); }
-	public BlendFunc setOperatorAlpha(BlendOperator op) { return setOperator(null, op); }
-	
-	public BlendFunc setOperator(BlendOperator rgbOp, BlendOperator alphaOp) {
-		if(rgbOp != null) function.RGB_func = rgbOp;	
-		if(alphaOp != null) function.ALPHA_func = alphaOp;
+		public BlendLayer setMultipliers(BlendMulti src, BlendMulti dst, BlendMulti srcA, BlendMulti dstA) {
+			if(src != null) multipliers.SRC_RGB_multi = src;	
+			if(dst != null) multipliers.DST_RGB_multi = dst;
+			if(srcA != null) multipliers.SRC_ALPHA_multi = srcA;	
+			if(dstA != null) multipliers.DST_ALPHA_multi = dstA;
+			
+			return this;
+		}
 		
-		return this;
+		public BlendLayer setOperator(BlendOperator rgbOp, BlendOperator alphaOp) {
+			if(rgbOp != null) function.RGB_func = rgbOp;	
+			if(alphaOp != null) function.ALPHA_func = alphaOp;
+			
+			return this;
+		}
+		
+		public void push() {
+			if(!enabled) {
+				glDisable(GL_BLEND);
+				return;
+			}
+
+			glEnable(GL_BLEND);
+			function.push();
+			multipliers.push();
+		}
+		
+		public void pushToLayer(int layer) {
+			if(!enabled) {
+				glDisablei(GL_BLEND, layer);
+				return;
+			}
+			
+			glEnablei(GL_BLEND, layer);
+			function.push(layer);
+			multipliers.push(layer);
+		}
+		
+		public void pull() {
+			enabled = glIsEnabled(GL_BLEND);
+			function = BlendOperator.pull(BlendFunc.this);
+			multipliers = BlendMulti.pull(BlendFunc.this);
+		}
+		
+		public void pullFromLayer(int layer) {
+			enabled = glIsEnabledi(GL_BLEND, layer);
+			function = BlendOperator.pull(BlendFunc.this, layer);
+			multipliers = BlendMulti.pull(BlendFunc.this, layer);
+		}
+		
+		public void copyTo(BlendLayer layer) {
+			layer.enabled = enabled;
+			
+			layer.function.RGB_func = function.RGB_func;
+			layer.function.ALPHA_func = function.ALPHA_func;
+			
+			layer.multipliers.SRC_RGB_multi = multipliers.SRC_RGB_multi;
+			layer.multipliers.DST_RGB_multi = multipliers.DST_RGB_multi;
+			layer.multipliers.SRC_ALPHA_multi = multipliers.SRC_ALPHA_multi;
+			layer.multipliers.DST_ALPHA_multi = multipliers.DST_ALPHA_multi;
+		}
+		
+		public BlendLayer clone() {
+			BlendLayer layer = new BlendLayer();
+			copyTo(layer);
+			return layer;
+		}
+		
+		public boolean isSame(BlendLayer layer) {
+			return 
+				enabled == layer.enabled &&
+					
+				function.RGB_func == layer.function.RGB_func &&
+				function.ALPHA_func == layer.function.ALPHA_func &&
+				
+				multipliers.SRC_RGB_multi == layer.multipliers.SRC_RGB_multi &&
+				multipliers.DST_RGB_multi == layer.multipliers.DST_RGB_multi &&
+				multipliers.SRC_ALPHA_multi == layer.multipliers.SRC_ALPHA_multi &&
+				multipliers.DST_ALPHA_multi == layer.multipliers.DST_ALPHA_multi ;
+		}
 	}
 	
 	public static enum BlendMulti {
@@ -196,6 +317,11 @@ public class BlendFunc extends GL_Function {
 				SRC_RGB_multi.glValue, DST_RGB_multi.glValue,
 				SRC_ALPHA_multi.glValue, DST_ALPHA_multi.glValue
 			);}
+			
+			void push(int layer) { glBlendFuncSeparatei( layer,
+				SRC_RGB_multi.glValue, DST_RGB_multi.glValue,
+				SRC_ALPHA_multi.glValue, DST_ALPHA_multi.glValue
+			);}
 		}
 		
 		private static MultiplierSet pull(BlendFunc func) {
@@ -204,6 +330,15 @@ public class BlendFunc extends GL_Function {
 				lookUp(func.getInt(GL_BLEND_DST_RGB)),
 				lookUp(func.getInt(GL_BLEND_SRC_ALPHA)),
 				lookUp(func.getInt(GL_BLEND_DST_ALPHA))
+			);
+		}
+		
+		private static MultiplierSet pull(BlendFunc func, int layer) {
+			return new MultiplierSet(
+				lookUp(func.getInt(GL_BLEND_SRC_RGB, layer)),
+				lookUp(func.getInt(GL_BLEND_DST_RGB, layer)),
+				lookUp(func.getInt(GL_BLEND_SRC_ALPHA, layer)),
+				lookUp(func.getInt(GL_BLEND_DST_ALPHA, layer))
 			);
 		}
 	}
@@ -235,12 +370,20 @@ public class BlendFunc extends GL_Function {
 			
 			BlendOperator RGB_func, ALPHA_func; 
 			void push() { glBlendEquationSeparate(RGB_func.glValue, ALPHA_func.glValue); }
+			void push(int layer) { glBlendEquationSeparatei(layer, RGB_func.glValue, ALPHA_func.glValue); }
 		}
 		
 		private static FunctionSet pull(BlendFunc func) {
 			return new FunctionSet(
 				lookUp(func.getInt(GL_BLEND_EQUATION_RGB)), 
 				lookUp(func.getInt(GL_BLEND_EQUATION_ALPHA))
+			);
+		}
+		
+		private static FunctionSet pull(BlendFunc func, int layer) {
+			return new FunctionSet(
+				lookUp(func.getInt(GL_BLEND_EQUATION_RGB, layer)), 
+				lookUp(func.getInt(GL_BLEND_EQUATION_ALPHA, layer))
 			);
 		}
 	}

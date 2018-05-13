@@ -1,14 +1,26 @@
 package com.Engine.RenderEngine.New_Pipeline.FBO;
 
+import static org.lwjgl.opengl.GL11.GL_BACK_LEFT;
+import static org.lwjgl.opengl.GL11.GL_BACK_RIGHT;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_DOUBLEBUFFER;
+import static org.lwjgl.opengl.GL11.GL_FRONT_RIGHT;
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static org.lwjgl.opengl.GL11.GL_NONE;
+import static org.lwjgl.opengl.GL11.GL_READ_BUFFER;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_STEREO;
 import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glEnable;
+import static org.lwjgl.opengl.GL11.glGetBoolean;
+import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL11.glReadBuffer;
 import static org.lwjgl.opengl.GL11.glStencilMask;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
+import static org.lwjgl.opengl.GL20.GL_DRAW_BUFFER0;
+import static org.lwjgl.opengl.GL20.GL_DRAW_BUFFER1;
+import static org.lwjgl.opengl.GL20.GL_MAX_DRAW_BUFFERS;
 import static org.lwjgl.opengl.GL20.glDrawBuffers;
 import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
 import static org.lwjgl.opengl.GL30.GL_DRAW_FRAMEBUFFER;
@@ -20,6 +32,7 @@ import static org.lwjgl.opengl.GL30.glDeleteFramebuffers;
 import static org.lwjgl.opengl.GL30.glGenFramebuffers;
 
 import java.nio.IntBuffer;
+import java.util.Arrays;
 
 import org.lwjgl.BufferUtils;
 
@@ -30,13 +43,23 @@ import com.Engine.Util.Vectors.MatrixUtil;
 import com.Engine.Util.Vectors.Vector2f;
 
 public class FBO {
+	public static final int MAX_DRAW_BUFFERS = glGetInteger(GL_MAX_DRAW_BUFFERS);
+	
 	public static final class ScreenFBO extends FBO {
+		public static final boolean IS_DOUBLE_BUFFERED = glGetBoolean(GL_DOUBLEBUFFER);
+		public static final boolean IS_STEREOSCOPIC = glGetBoolean(GL_STEREO);
+		
 		private ScreenFBO() { 
 			super(0, 0, -1); 
 			
 			super.id = 0;
 			super.bitMask = GL_COLOR_BUFFER_BIT; 
-			super.drawBuffers = null;
+			
+			super.readBuffer = glGetInteger(GL_READ_BUFFER);
+			
+			for(int i = 0; i < MAX_DRAW_BUFFERS; i ++) {
+				super.drawBuffersRaw[i] = glGetInteger(GL_DRAW_BUFFER0 + i);
+			}
 		}
 		
 		public void screenResized(Window window) {
@@ -51,30 +74,74 @@ public class FBO {
 		public void cleanUp() { notifyType(); }
 		
 		private void notifyType() { throw new IllegalStateException("Screen FBO cannot be changed"); }
+		
+		private void checkRenderTarget(int target) {
+			if(!ScreenFBO.IS_DOUBLE_BUFFERED && (target == GL_BACK_LEFT || target == GL_BACK_RIGHT))
+				throw new IllegalArgumentException("Default FBO is not Double Buffered! Back buffers cannot be used");
+
+			if(!ScreenFBO.IS_STEREOSCOPIC && (target == GL_FRONT_RIGHT || target == GL_BACK_RIGHT))
+				throw new IllegalArgumentException("Default FBO is not Stereoscopic! Right buffers cannot be used");
+		}
+		
+		public void setReadBuffer(int target) { 
+			if(target == super.readBuffer) return;
+
+			checkRenderTarget(target);
+			super.readBuffer = target;
+			super.readBuffersChanged = true;
+		}
+		
+		public void setDrawBuffers(int... indexOrder) {
+			if(indexOrder.length > MAX_DRAW_BUFFERS)  throw new IllegalArgumentException(
+					"Can only have " + MAX_DRAW_BUFFERS + " active at a time; not " + indexOrder.length);
+			
+			for(int i = 0; i < MAX_DRAW_BUFFERS; i ++) {
+				int newValue = GL_NONE;
+				
+				if(i < indexOrder.length) {
+					newValue = indexOrder[i];
+					checkRenderTarget(newValue);
+				}
+				
+				if(super.drawBuffersRaw[i] != newValue) {
+					super.drawBuffersChanged = true;
+					super.drawBuffersRaw[i] = newValue;
+				}
+			}
+		}
 	};
 	
 	public static final ScreenFBO SCREEN_FBO = new ScreenFBO();
 	
 //	------
 
-	private static FBO current;
+	private static FBO currentDraw;
+	private static FBO currentRead;
 	private static boolean allowMasterAccess = true;
 	
 	public static void allowMasterAccess(boolean allow) { FBO.allowMasterAccess = allow; }
 	
 	public static void clear_bound() {
 		if(!allowMasterAccess) return;
-		current.clear();
+		currentDraw.clear();
 	}
 	
-	public static FBO current() { return current; }
+	public static FBO currentDraw() { return currentDraw; }
+	public static FBO currentRead() { return currentRead; }
 	
 //	------
 	
 	public static boolean FBOS_CAN_INITALISE_TARGETS = true;
 	
+	private int readBuffer;
+	private boolean readBuffersChanged;
+	
+	private int[] drawBuffersRaw;
 	private IntBuffer drawBuffers;
+	private boolean drawBuffersChanged;
+	
 	private IRenderTarget[][] attachemnts;
+	
 	private int multiSampleCount;
 	private float origWidth, origHeight;
 	private int width, height;
@@ -91,40 +158,76 @@ public class FBO {
 		if(isMultiSampled()) glEnable(GL_MULTISAMPLE);
 		
 		id = glGenFramebuffers();
-		drawBuffers = BufferUtils.createIntBuffer(0);
+		
+		drawBuffersRaw = new int[MAX_DRAW_BUFFERS];
+		drawBuffers = BufferUtils.createIntBuffer(MAX_DRAW_BUFFERS);
 		attachemnts = new IRenderTarget[Attachment.values().length][];
 		
+		Arrays.fill(drawBuffersRaw, GL_NONE);
+		drawBuffers.put(drawBuffersRaw);
 		drawBuffers.flip();
+	}
+	
+	public void setReadBuffer(int attachmentIndex) { 
+		int newValue = GL_COLOR_ATTACHMENT0 + attachmentIndex;
+		if(newValue == this.readBuffer) return;
+		this.readBuffer = newValue;
+		
+		readBuffersChanged = true;
+	}
+	
+	public void setDrawBuffers(int... indexOrder) {
+		if(indexOrder.length > MAX_DRAW_BUFFERS) 
+			throw new IllegalArgumentException("Can only have " + MAX_DRAW_BUFFERS + " active at a time; not " + indexOrder.length);
+		
+		for(int i = 0; i < MAX_DRAW_BUFFERS; i ++) {
+			int newValue = i >= indexOrder.length || indexOrder[i] < 0 ? GL_NONE : GL_COLOR_ATTACHMENT0 + indexOrder[i];
+			
+			if(drawBuffersRaw[i] != newValue) {
+				drawBuffersChanged = true;
+				drawBuffersRaw[i] = newValue;
+			}
+		}
 	}
 	
 	public void bind() { bind(GL_FRAMEBUFFER); }
 	public void bindRead() { bind(GL_READ_FRAMEBUFFER); }
 	public void bindDraw() { bind(GL_DRAW_FRAMEBUFFER); }
 	
-	public void bindRead(int index) { bind(GL_READ_FRAMEBUFFER, index); }
-	public void bindDraw(int index) { bind(GL_DRAW_FRAMEBUFFER, index); }
+	public void bindRead(int index)    { setReadBuffer(index);  bind(GL_READ_FRAMEBUFFER); }
+	public void bindDraw(int... index) { setDrawBuffers(index); bind(GL_DRAW_FRAMEBUFFER); }
 
-	public void bind(int glTarget) { bind(glTarget, this, -1); }
-	public void bind(int glTarget, int index) { bind(glTarget, this, index); }
+	public void bind(int glTarget) { bind(glTarget, this); }
 	
-	protected static void bind(int glTarget, FBO fbo, int index) {
+	protected static void bind(int glTarget, FBO fbo) {
 		glBindFramebuffer(glTarget, fbo.id);
-		glViewport(0, 0, fbo.width, fbo.height);
 		
-		if(glTarget == GL_DRAW_FRAMEBUFFER && fbo != SCREEN_FBO)
-			if(index < 0) glDrawBuffers(fbo.drawBuffers); 
-			else glDrawBuffers(GL_COLOR_ATTACHMENT0 + index);
-		
-		else if(glTarget == GL_READ_FRAMEBUFFER && fbo != SCREEN_FBO) 
-			if(index < 0) glReadBuffer(GL_COLOR_ATTACHMENT0); 
-			else glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
-		
-		else if(fbo != SCREEN_FBO)
-			glDrawBuffers(fbo.drawBuffers);
-
-		//else glDrawBuffers(GL_FRONT);
-		
-		FBO.current = fbo;
+		boolean both = false;
+		switch(glTarget) {
+			case GL_FRAMEBUFFER: both = true;
+			
+			case GL_DRAW_FRAMEBUFFER: 
+				currentDraw = fbo; 
+				glViewport(0, 0, fbo.width, fbo.height);
+				
+				if(fbo.drawBuffersChanged) {
+					fbo.drawBuffers.clear(); fbo.drawBuffers.put(fbo.drawBuffersRaw); fbo.drawBuffers.flip();
+					fbo.drawBuffersChanged = false;
+					glDrawBuffers(fbo.drawBuffers); 
+				}
+			if(!both) break;
+			
+			case GL_READ_FRAMEBUFFER: 
+				currentRead = fbo; 
+				
+				if(fbo.readBuffersChanged) {
+					fbo.readBuffersChanged = false;
+					glReadBuffer(fbo.readBuffer);
+				}
+			break;
+			
+			default: throw new IllegalArgumentException(glTarget + " is not a valid FBO Binding Target");
+		}
 	}
 	
 	public static void unbind() { unbind(GL_FRAMEBUFFER); }
@@ -137,8 +240,8 @@ public class FBO {
 	
 	public void attach(IRenderTarget target, Attachment attachment) { attach(target, attachment, 0); }
 	public void attach(IRenderTarget target, Attachment attachment, int index) {
-		if(index > attachment.getMaxIndex()) throw new IllegalArgumentException(
-				"Index out of range for " + attachment + "; max index is " + attachment.getMaxIndex());
+		if(index >= attachment.getMaxIndex()) throw new IllegalArgumentException(
+				"Index out of range for " + attachment + "; Max index for " + attachment + " is " + attachment.getMaxIndex());
 
 		if(target.getFormat() == null && FBOS_CAN_INITALISE_TARGETS) 
 			target.init(attachment.getFormat());
@@ -179,7 +282,6 @@ public class FBO {
 		array[index] = target;
 		bitMask = attachment.maskClearBit(bitMask);
 	}
-	
 
 	public IRenderTarget getAttachment(Attachment attachment) { return getAttachment(attachment, 0); } 
 	public IRenderTarget getAttachment(Attachment attachment, int index) {

@@ -37,7 +37,7 @@ public class DepthTest extends GL_Function {
 	private DepthTest() { }
 	private DepthTest(boolean enable) { super(enable); } 
 	
-	public void _push() {
+	protected void _push() {
 		glDepthMask(enableWrite);
 		glDepthFunc(condition.getValue());
 		glDepthRange(nearVal, farValue);
@@ -50,7 +50,7 @@ public class DepthTest extends GL_Function {
 		CURRENT.clearDepth = clearDepth;
 	}
 
-	public void _pull() {
+	protected void _pull() {
 		if(DEPTH_VALUES == null) return;
 		
 		condition = Condition.lookUp(getInt(GL_DEPTH_FUNC));
@@ -83,8 +83,8 @@ public class DepthTest extends GL_Function {
 	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_DEPTH_TEST); }
 	public static void disable() { glDisable(GL_DEPTH_TEST); }
 
-	public static DepthTest diabled() { return new DepthTest(false); }
-	public static DepthTest enabled() { return new DepthTest(true); }
+	public static DepthTest blankDiabled() { return new DepthTest(false); }
+	public static DepthTest blankEnabled() { return new DepthTest(true); }
 	
 	public static DepthTest current() { return new DepthTest(isEnabled()); }
 	public static DepthTest normal() { return NORMAL.clone(); }

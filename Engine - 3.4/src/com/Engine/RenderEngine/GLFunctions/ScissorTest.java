@@ -21,8 +21,8 @@ public class ScissorTest extends GL_Function {
 	private ScissorTest() { }
 	private ScissorTest(boolean enable) { super(enable); } 
 	
-	public void _push() {
-		glScissor(x, FBO.current().getHeight() - y - height, width, height);
+	protected void _push() {
+		glScissor(x, FBO.currentDraw().getHeight() - y - height, width, height);
 		
 		CURRENT.x = x;
 		CURRENT.y = y;
@@ -30,7 +30,7 @@ public class ScissorTest extends GL_Function {
 		CURRENT.height = height;
 	}
 
-	public void _pull() {
+	protected void _pull() {
 		SCISSOR_BOUNDS.clear();
 		get(GL_SCISSOR_BOX, SCISSOR_BOUNDS);
 		x = SCISSOR_BOUNDS.get(); y = SCISSOR_BOUNDS.get();
@@ -54,8 +54,8 @@ public class ScissorTest extends GL_Function {
 	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_SCISSOR_TEST); }
 	public static void disable() { glDisable(GL_SCISSOR_TEST); }
 
-	public static ScissorTest diabled() { return new ScissorTest(false); }
-	public static ScissorTest enabled() { return new ScissorTest(true); }
+	public static ScissorTest blankDiabled() { return new ScissorTest(false); }
+	public static ScissorTest blankEnabled() { return new ScissorTest(true); }
 	
 	public static ScissorTest current() { return new ScissorTest(isEnabled()); }
 	

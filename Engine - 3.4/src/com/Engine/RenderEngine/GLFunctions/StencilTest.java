@@ -44,7 +44,7 @@ public class StencilTest extends GL_Function {
 	private StencilTest() { }
 	private StencilTest(boolean enabled) { super(enabled); }
 	
-	public void _push() {
+	protected void _push() {
 		back.push();
 		front.push();
 		
@@ -56,7 +56,7 @@ public class StencilTest extends GL_Function {
 		CURRENT.clearValue = clearValue;
 	}
 
-	public void _pull() {
+	protected void _pull() {
 		this.back = new StencilSet(GLFace.Back);
 		this.front = new StencilSet(GLFace.Front);
 		
@@ -79,8 +79,8 @@ public class StencilTest extends GL_Function {
 	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_STENCIL_TEST); }
 	public static void disable() { glDisable(GL_STENCIL_TEST); }
 
-	public static StencilTest diabled() { return new StencilTest(false); }
-	public static StencilTest enabled() { return new StencilTest(true); }
+	public static StencilTest blankDisable() { return new StencilTest(false); }
+	public static StencilTest blankEnabled() { return new StencilTest(true); }
 	
 	public static StencilTest current() { return new StencilTest(isEnabled()); }
 	

@@ -12,6 +12,7 @@ import static org.lwjgl.opengl.GL11.GL_STENCIL;
 import static org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
+import static org.lwjgl.opengl.GL11.glGetInteger;
 import static org.lwjgl.opengl.GL14.GL_DEPTH_COMPONENT16;
 import static org.lwjgl.opengl.GL14.GL_DEPTH_COMPONENT24;
 import static org.lwjgl.opengl.GL14.GL_DEPTH_COMPONENT32;
@@ -22,6 +23,7 @@ import static org.lwjgl.opengl.GL30.GL_DEPTH_ATTACHMENT;
 import static org.lwjgl.opengl.GL30.GL_DEPTH_STENCIL;
 import static org.lwjgl.opengl.GL30.GL_DEPTH_STENCIL_ATTACHMENT;
 import static org.lwjgl.opengl.GL30.GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
+import static org.lwjgl.opengl.GL30.GL_MAX_COLOR_ATTACHMENTS;
 import static org.lwjgl.opengl.GL30.GL_STENCIL_ATTACHMENT;
 import static org.lwjgl.opengl.GL30.GL_STENCIL_INDEX8;
 import static org.lwjgl.opengl.GL30.GL_UNSIGNED_INT_24_8;
@@ -30,10 +32,10 @@ public final class FBO_Types {
 	private FBO_Types() { }
 	
 	public static enum Attachment {
-		ColourBuffer(GL_COLOR_ATTACHMENT0, 15, GL_COLOR_BUFFER_BIT, TargetFormat.Colour),
-		DepthBuffer(GL_DEPTH_ATTACHMENT, 0, GL_DEPTH_BUFFER_BIT, TargetFormat.Depth),
-		StencilBuffer(GL_STENCIL_ATTACHMENT, 0, GL_STENCIL_BUFFER_BIT, TargetFormat.Stencil),
-		DepthStencilBuffer(GL_DEPTH_STENCIL_ATTACHMENT, 0, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, TargetFormat.DepthStencil);
+		ColourBuffer	(GL_COLOR_ATTACHMENT0, glGetInteger(GL_MAX_COLOR_ATTACHMENTS), GL_COLOR_BUFFER_BIT,   TargetFormat.Colour),
+		DepthBuffer		(GL_DEPTH_ATTACHMENT, 	1, 									   GL_DEPTH_BUFFER_BIT,   TargetFormat.Depth),
+		StencilBuffer	(GL_STENCIL_ATTACHMENT, 1, 									   GL_STENCIL_BUFFER_BIT, TargetFormat.Stencil),
+		DepthStencilBuffer(GL_DEPTH_STENCIL_ATTACHMENT, 1, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, TargetFormat.DepthStencil);
 		
 		private TargetFormat format;
 		private int glAttchment, maxIndex, glClearBit;
