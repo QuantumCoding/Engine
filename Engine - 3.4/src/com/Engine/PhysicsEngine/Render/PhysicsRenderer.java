@@ -9,9 +9,9 @@ import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glDrawElements;
 import static org.lwjgl.opengl.GL11.glPolygonMode;
 
-import com.Engine.RenderEngine.Shaders.Renderer;
-import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Shaders.Default.Model;
+import com.Engine.RenderEngine.Shaders.Render.Renderer;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 
 public class PhysicsRenderer extends Renderer<Model, PhysicsRenderProperties, PhysicsShader> {
 	public PhysicsRenderer(Shader shader) {

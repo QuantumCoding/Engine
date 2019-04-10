@@ -19,7 +19,13 @@ uniform mat4 viewMatrix;
 uniform float numberOfRows;
 uniform vec2 offset;
 
-uniform vec3 lightPosition[LIGHT_COUNT];
+struct Light {
+	vec3 color;
+	vec3 position;
+	vec3 attenuation;
+};
+
+uniform Light lights[LIGHT_COUNT];
 
 uniform float fogDensity;
 uniform float fogGradient;
@@ -35,8 +41,10 @@ void main(void) {
 	
 	texCoordPass = (texCoord / numberOfRows) + offset;
 	surfaceNormal = (transformationMatrix * vec4(normal, 0.0)).xyz;
-	for(int i=0; i<LIGHT_COUNT; i++) {
-		toLightVector[i] = lightPosition[i] - worldPosition.xyz;
+	
+	for(int i = 0; i < LIGHT_COUNT; i ++) {
+		toLightVector[i] = lights[i].position - worldPosition.xyz;
 	}
+	
 	toCameraVector = (inverse(viewMatrix) * vec4(0, 0, 0, 1)).xyz - worldPosition.xyz;
 }

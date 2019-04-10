@@ -1,9 +1,10 @@
 package com.Engine.RenderEngine.Font;
 
+import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.XML.XMLTag;
 
 public class Character {
-	private static final int PADDING = 8;//3;
+	private static final int PADDING = 3;
 	
 	private int charCode;
 
@@ -21,7 +22,7 @@ public class Character {
 		this.charCode 	 = (int) tag.getProperty("id");
 		
 		this.xAdvance 	 = (float) tag.getProperty("xAdvance") - padding + PADDING; // + padding / 2
-		this.yAdvance 	 = (float) tag.getProperty("yAdvance") - padding + PADDING;
+//		this.yAdvance 	 = (float) tag.getProperty("yAdvance") - padding + PADDING;
 		this.xOffset 	 = (float) tag.getProperty("xOffset")  + padding / 2 - PADDING;
 		this.yOffset 	 = (float) tag.getProperty("yOffset")  + padding / 2 - PADDING;
 		
@@ -40,14 +41,20 @@ public class Character {
 		this.sheetY /= textureHeight;
 	}
 	
-	Character(int id, int xAdvance) { this.xAdvance = xAdvance; this.charCode = id; }
+	Character(int id) { this.charCode = id; }
 	
 	public static class CharacterSpace extends Character {
 		public static final int ASCII_SPACE = (int) ' ';
-		protected CharacterSpace(int width) { super(ASCII_SPACE, width); }
+		protected CharacterSpace(int width) { super(ASCII_SPACE); super.xAdvance = width; }
+	}
+	
+	public static class CharacterReturn extends Character {
+		public static final int ASCII_RETURN = (int) '\n';
+		protected CharacterReturn(int hight) { super(ASCII_RETURN); super.yAdvance = hight; }
 	}
 
 	public int getCharCode() { return charCode; }
+	public char asChar() { return (char) charCode; }
 
 	public float getAdvanceX() { return xAdvance; }
 	public float getAdvanceY() { return yAdvance; }
@@ -65,4 +72,8 @@ public class Character {
 
 	public int getSheetId() { return sheetId; }
 	public int getColorChanel() { return colorChanel; }
+	
+	public Vector2f getAdvance() { return new Vector2f(xAdvance, yAdvance); }
+	public Vector2f getOffset() { return new Vector2f(xOffset, yOffset); }
+	public Vector2f getSize() { return new Vector2f(width, height); }
 }

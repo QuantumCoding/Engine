@@ -3,10 +3,10 @@ package com.Engine.RenderEngine.Particles.Render;
 import org.lwjgl.util.vector.Matrix4f;
 
 import com.Engine.RenderEngine.Models.ModelData.Attribute;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformMat4;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformTexture;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformMat4;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformTexture;
 
 public class ParticleShader extends Shader {
 	private static final String VERTEX_SHADER_LOC = "ParticleShader.vsh";
@@ -29,8 +29,6 @@ public class ParticleShader extends Shader {
 
 	@Override
 	protected void bindAttributies() {
-		bind();
-		
 		super.bindAttribute(ATTRIBUTE_LOC_POSITIONS, "position");
 		super.bindAttribute(ATTRIBUTE_LOC_TEXCOORDS, "texCoord");
 

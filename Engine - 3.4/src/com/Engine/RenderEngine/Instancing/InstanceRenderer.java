@@ -5,10 +5,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
-import com.Engine.RenderEngine.Shaders.RenderProperties;
-import com.Engine.RenderEngine.Shaders.Renderer;
-import com.Engine.RenderEngine.Shaders.Shader;
-import com.Engine.RenderEngine.Util.Camera;
+import com.Engine.RenderEngine.Camera.Camera;
+import com.Engine.RenderEngine.Shaders.Render.RenderProperties;
+import com.Engine.RenderEngine.Shaders.Render.Renderer;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.Util.Vectors.Vector3f;
 
 public abstract class InstanceRenderer<T extends IRenderableInstance<? super E>, E extends RenderProperties, S extends Shader> extends Renderer<T, E, S> {

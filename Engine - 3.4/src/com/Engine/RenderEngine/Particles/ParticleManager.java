@@ -4,24 +4,18 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.Engine.RenderEngine.Camera.Camera;
 import com.Engine.RenderEngine.Particles.Render.ParticleInstanceRender;
 import com.Engine.RenderEngine.Particles.Render.ParticleRenderProperties;
-import com.Engine.RenderEngine.Particles.Render.ParticleShader;
-import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
-import com.Engine.Util.Time;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class ParticleManager {
 	public static final int PARTICLE_CREATION_CAP = 1_000;
-	public static final ParticleShader ParticleShader = new ParticleShader();
+	public static final ParticleRenderingSystem ParticleShader = new ParticleRenderingSystem();
 	
 	private List<Particle> particles;
 	private ParticleInstanceRender model;
-	
-	public static double avg;
-	private static int count;
-	private static long sum;
 	
 	public ParticleManager() {
 		particles = new LinkedList<>();
@@ -43,20 +37,7 @@ public class ParticleManager {
 			}
 		}
 		
-		long endTime, startTime = Time.getSystemTime();
 		ParticleSorter.sort(particles);
-		endTime = Time.getSystemTime();
-		
-		float last = Float.MAX_VALUE;
-		for(iterator = particles.iterator(); iterator.hasNext();) {
-			Particle particle = iterator.next();
-			if(particle.getDistance() > last) System.err.println("ERRORR");
-			last = particle.getDistance();
-		}
-		
-		sum += endTime - startTime;
-		avg = (double) sum / ++ count;
-//		System.out.println(avg);
 	}
 	
 	public void render() {

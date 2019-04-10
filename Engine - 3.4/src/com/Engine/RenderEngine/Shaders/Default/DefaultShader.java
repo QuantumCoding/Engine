@@ -4,14 +4,14 @@ import java.util.List;
 
 import org.lwjgl.util.vector.Matrix4f;
 
-import com.Engine.RenderEngine.Lights.Light;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformFloat;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformMat4;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformTexture;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformVec2;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformVec3;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformFloat;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformMat4;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformStruct;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformTexture;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformVec2;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformVec3;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
 
@@ -21,26 +21,44 @@ public class DefaultShader extends Shader {
 
 	private static final int LIGHT_COUNT = 4;
 	
-	@Uniform private UniformVec3 skyColor;
-	@Uniform private UniformFloat fogDensity;
-	@Uniform private UniformFloat fogGradient;
+	public static class UniformLight extends UniformStruct<Light> {
+		public UniformLight(String name) { super(name); }
 
-	@Uniform(size=LIGHT_COUNT) private UniformVec3 lightPosition[];
-	@Uniform(size=LIGHT_COUNT) private UniformVec3 lightColor[];
-	@Uniform(size=LIGHT_COUNT) private UniformVec3 lightAttenuation[];
-	@Uniform private UniformFloat shineDamper;
-	@Uniform private UniformFloat reflectivity;
-
-	@Uniform private UniformFloat numberOfRows;
-	@Uniform private UniformVec2 offset;
+		@Uniform UniformVec3 color;
+		@Uniform UniformVec3 position;
+		@Uniform UniformVec3 attenuation;
+		
+		public void load(Light light) {
+			if(light  == null) {
+				color.load(new Vector3f());
+				position.load(new Vector3f());
+				attenuation.load(new Vector3f(1, 0, 0));
+			} else {
+				color.load(light.getColor());
+				position.load(light.getPosition());
+				attenuation.load(light.getAttenuation());
+			}
+		}
+	}
 	
-	@Uniform private UniformMat4 transformationMatrix;
+	@Uniform UniformVec3 skyColor;
+	@Uniform UniformFloat fogDensity;
+	@Uniform UniformFloat fogGradient;
 
-	@Uniform private UniformMat4 projectionMatrix;
-	@Uniform private UniformMat4 viewMatrix;
+	@Uniform(size=LIGHT_COUNT) UniformLight lights[];
+	@Uniform UniformFloat shineDamper;
+	@Uniform UniformFloat reflectivity;
+
+	@Uniform UniformFloat numberOfRows;
+	@Uniform UniformVec2 offset;
 	
-	@Uniform private UniformTexture texture0;
-	@Uniform private UniformFloat time;
+	@Uniform UniformMat4 transformationMatrix;
+
+	@Uniform UniformMat4 projectionMatrix;
+	@Uniform UniformMat4 viewMatrix;
+	
+	@Uniform UniformTexture texture0;
+	@Uniform UniformFloat time;
 	
 	public DefaultShader() {
 		super(VERTEX_SHADER_LOC, FRAGMENT_SHADER_LOC, DefaultRenderer.class);
@@ -48,8 +66,6 @@ public class DefaultShader extends Shader {
 
 	@Override
 	protected void bindAttributies() {
-		bind();
-		
 		super.bindAttribute(ATTRIBUTE_LOC_POSITIONS, "position");
 		super.bindAttribute(ATTRIBUTE_LOC_TEXCOORDS, "texCoord");
 		super.bindAttribute(ATTRIBUTE_LOC_NORMALS,   "normal");
@@ -77,31 +93,11 @@ public class DefaultShader extends Shader {
 	}
 	
 	public void loadLights(List<Light> lights) {	
-		for(int i = 0; i < LIGHT_COUNT; i ++) {
-			if(i < lights.size()) {
-				this.lightPosition[i].load(lights.get(i).getPosition());
-				this.lightColor[i].load(lights.get(i).getColor());
-				this.lightAttenuation[i].load(lights.get(i).getAttenuation());
-			} else {
-				this.lightPosition[i].load(new Vector3f());
-				this.lightColor[i].load(new Vector3f());		
-				this.lightAttenuation[i].load(new Vector3f(1, 0, 0));		
-			}
-		}
+		for(int i = 0; i < LIGHT_COUNT; i ++) this.lights[i].load(i < lights.size() ? lights.get(i) : null);
 	}
 	
 	public void loadLights(Light... lights) {	
-		for(int i = 0; i < LIGHT_COUNT; i ++) {
-			if(i < lights.length) {
-				this.lightPosition[i].load(lights[i].getPosition());
-				this.lightColor[i].load(lights[i].getColor());
-				this.lightAttenuation[i].load(lights[i].getAttenuation());
-			} else {
-				this.lightPosition[i].load(new Vector3f());
-				this.lightColor[i].load(new Vector3f());		
-				this.lightAttenuation[i].load(new Vector3f(1, 0, 0));		
-			}
-		}
+		for(int i = 0; i < LIGHT_COUNT; i ++) this.lights[i].load(i < lights.length ? lights[i] : null);
 	}
 	
 	public void loadShineVariables(float damper, float reflectivity) {

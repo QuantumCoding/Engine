@@ -3,9 +3,10 @@ package com.Engine.PhysicsEngine.Render.Vector;
 import org.lwjgl.util.vector.Matrix4f;
 
 import com.Engine.PhysicsEngine.Render.PhysicsRenderProperties;
-import com.Engine.PhysicsEngine.Render.PhysicsShader;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.Shaders.Default.Model;
+import com.Engine.RenderEngine.Shaders.Render.RenderProperties;
+import com.Engine.RenderEngine.System.RenderingSystem;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.Util.Vectors.MatrixUtil;
 import com.Engine.Util.Vectors.Vector3f;
@@ -14,12 +15,13 @@ public class VectorModel {
 	private static final Vector3f MODEL_DEFAULT = new Vector3f(0, 1, 0);
 	private static Model body, top;
 	
-	public static void init(PhysicsShader shader) {
+	@SuppressWarnings("unchecked")
+	public static void init(RenderingSystem<Model, ? super PhysicsRenderProperties> shader) {
 		body = new Model(ModelLoader.loadOBJ("res/models/physics/VectorBody.obj"));
 		top = new Model(ModelLoader.loadOBJ("res/models/physics/VectorTop.obj"));
 		
-		body.setShader(shader);
-		top.setShader(shader);
+		body.setShader((RenderingSystem<Model, RenderProperties>) shader);
+		top.setShader((RenderingSystem<Model, RenderProperties>) shader);
 	}
 	
 	public static void renderVector(Vector3f vector, Vector3f translation, Vector3f color) {

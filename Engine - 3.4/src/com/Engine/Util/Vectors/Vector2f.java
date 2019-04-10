@@ -435,9 +435,10 @@ public class Vector2f {
 	
 //---------------------------------------------------- Accessors / Modifiers ----------------------------------------------------\\
 	
-	public void set(Vector2f set) {
+	public Vector2f set(Vector2f set) {
 		this.x = set.x;
 		this.y = set.y;
+		return this;
 	}
 	
 	public Vector2f clone() {

@@ -2,8 +2,8 @@ package com.Engine.Util.Vectors;
 
 import org.lwjgl.util.vector.Matrix4f;
 
-import com.Engine.RenderEngine.Shaders.Shader;
-import com.Engine.RenderEngine.Util.Camera;
+import com.Engine.RenderEngine.Camera.Camera;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 
 public class MatrixUtil {

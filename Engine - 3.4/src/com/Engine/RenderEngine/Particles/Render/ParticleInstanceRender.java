@@ -3,8 +3,9 @@ package com.Engine.RenderEngine.Particles.Render;
 import com.Engine.RenderEngine.Instancing.IRenderableInstance;
 import com.Engine.RenderEngine.Instancing.InstanceVBO;
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
-import com.Engine.RenderEngine.Shaders.Renderer;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
+import com.Engine.RenderEngine.System.RenderingSystem;
+import com.Engine.RenderEngine.System.RenderingSystem.ModelInstance;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class ParticleInstanceRender implements IRenderableInstance<ParticleRenderProperties> {
@@ -26,22 +27,19 @@ public class ParticleInstanceRender implements IRenderableInstance<ParticleRende
 	private static final ModelData PARTICLE_MODEL_DATA; static {
 		PARTICLE_MODEL_DATA = new ModelData(.5f, 1000, new Vector3f());
 		
-		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, false);
-		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, false);
+		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICES, BufferUsage.Static_Draw);
+		PARTICLE_MODEL_DATA.storeDataInAttributeList(ParticleShader.ATTRIBUTE_LOC_TEXCOORDS, 2, TEX_COORDS, BufferUsage.Static_Draw);
 		
-		PARTICLE_MODEL_DATA.loadIndicies(INDICES);
+		PARTICLE_MODEL_DATA.loadIndices(INDICES);
 	}
 	
 	public static final int MAX_PARTICLE_COUNT = 5000;
 	public static final int INSTANCE_DATA_LENGTH = 22;
 	
-	private Shader shader;
-	private Renderer<ParticleInstanceRender, ParticleRenderProperties, ParticleShader> renderer;
+	private RenderingSystem<ParticleInstanceRender, ParticleRenderProperties> shader;
 	
-	@SuppressWarnings("unchecked")
-	public ParticleInstanceRender(Shader shader) {
+	public ParticleInstanceRender(RenderingSystem<ParticleInstanceRender, ParticleRenderProperties> shader) {
 		this.shader = shader;
-		renderer = (Renderer<ParticleInstanceRender, ParticleRenderProperties, ParticleShader>) shader.getRenderer();
 	}
 	
 	public void addInstanceAttributes(InstanceVBO vbo) {
@@ -56,8 +54,8 @@ public class ParticleInstanceRender implements IRenderableInstance<ParticleRende
 		vbo.nextAttribute(vao, ParticleShader.ATTRIBUTE_LOC_MODEL_VIEW, 4, 1);
 	}
 	
-	public void render(ParticleRenderProperties properties) {
-		renderer.addModel(this, properties);
+	public ModelInstance<ParticleInstanceRender, ParticleRenderProperties> render(ParticleRenderProperties properties) {
+		return shader.addModel(this, properties);
 	}
 
 	public int hashCode() {
@@ -80,7 +78,7 @@ public class ParticleInstanceRender implements IRenderableInstance<ParticleRende
 		return true;
 	}
 
-	public Shader getShader() { return shader; }
+	public RenderingSystem<ParticleInstanceRender, ParticleRenderProperties> getShader() { return shader; }
 	public ModelData getModelData() { return PARTICLE_MODEL_DATA; }
 	
 	public int getInstanceLength() { return INSTANCE_DATA_LENGTH; }

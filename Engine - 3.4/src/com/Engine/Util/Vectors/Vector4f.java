@@ -31,6 +31,10 @@ public class Vector4f {
 		this(clone.x, clone.y, z, w);
 	}
 	
+	public Vector4f(Vector2f xy, Vector2f zw) {
+		this(xy.x, xy.y, zw.x, zw.y);
+	}
+	
 	public Vector4f(Vector3f clone) {
 		this(clone, 0);
 	}
@@ -170,10 +174,10 @@ public class Vector4f {
 
 	public Vector4f capMin(float x, float y, float z, float w) {
 		return new Vector4f(
-				this.x > x ? x : this.x, 
-				this.y > y ? y : this.y, 
-				this.z > z ? z : this.z, 
-				this.w > w ? w : this.w
+				this.x < x ? x : this.x, 
+				this.y < y ? y : this.y, 
+				this.z < z ? z : this.z, 
+				this.w < w ? w : this.w
 			);
 	}
 	
@@ -184,10 +188,10 @@ public class Vector4f {
 
 	public Vector4f capMax(float x, float y, float z, float w) {
 		return new Vector4f(
-				this.x < x ? x : this.x, 
-				this.y < y ? y : this.y, 
-				this.z < z ? z : this.z, 
-				this.w < w ? w : this.w
+				this.x > x ? x : this.x, 
+				this.y > y ? y : this.y, 
+				this.z > z ? z : this.z, 
+				this.w > w ? w : this.w
 			);
 	}
 	

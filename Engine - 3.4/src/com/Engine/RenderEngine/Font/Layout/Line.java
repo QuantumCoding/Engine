@@ -28,13 +28,13 @@ public class Line {
 		if(character.getCharCode() == Character.CharacterSpace.ASCII_SPACE) {
 			current.addCharacter(character);
 			words.add(current);
-			
-			width += character.getAdvanceX() * textScale + current.getWidth();
-			current = width > limit ? null : new Word(textScale);
+
+			width += current.getWidth();
+			current = limit > 0 && width > limit ? null : new Word(textScale);
 			return current != null;
 		}
 		
-		float approxSize = current.approxSize(character);
+		float approxSize = current.approxSize(character); 
 		if(limit > 0 && approxSize + width > limit) {
 			if(words.size() == 0) {
 				words.add(current);
@@ -51,12 +51,14 @@ public class Line {
 
 	private void forceClosed() { if(current != null) words.add(current); }
 	public ListIterator<Word> iterate() { return words.listIterator(); }
-	
+
 	public static ListIterator<Line> create(String message, Font font, Vector2f scale, Vector2f limit) {
+		return create(message, font, scale, limit, 0); }
+	public static ListIterator<Line> create(String message, Font font, Vector2f scale, Vector2f limit, float indent) {
 		LinkedList<Line> lines = new LinkedList<>();
 		Line current = new Line(scale.x, limit.x);
-		lines.add(current);
-				
+		lines.add(current); current.width = indent;
+
 		for(int i = 0; i < message.length(); i ++) {
 			Character character = font.getCharacter(message.charAt(i));
 			

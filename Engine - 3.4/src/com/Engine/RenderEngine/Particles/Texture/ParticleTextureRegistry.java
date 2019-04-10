@@ -69,7 +69,7 @@ public class ParticleTextureRegistry {
 		}}
 		
 		buffer.flip();
-		textureMap = new Texture2D(buffer, new Vector2f(imageSize));
+		textureMap = new Texture2D(false, buffer, new Vector2f(imageSize));
 		
 		BufferedImage image = new BufferedImage(imageSize, imageSize, BufferedImage.TYPE_INT_ARGB);
 		

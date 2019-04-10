@@ -3,6 +3,7 @@ package com.Engine.Util.XML;
 import static com.Engine.Util.XML.XMLRegistry.ESCAPE_CODES;
 import static com.Engine.Util.XML.XMLRegistry.ESCAPE_REVERT;
 import static com.Engine.Util.XML.XMLRegistry.PARSERS;
+import static com.Engine.Util.XML.XMLRegistry.PARSERS_ORDER;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -74,8 +75,7 @@ public class XMLParser {
 	}
 	
 	public static Object parseValue(String value) {
-		for(Class<?> clazz : PARSERS.keySet()) {
-			XMLTypeParser<?> parser = PARSERS.get(clazz);
+		for(XMLTypeParser<?> parser : PARSERS_ORDER) {
 			try { return parser.parse(value); } 
 			catch(XMLParserFormatException e) { }
 		}

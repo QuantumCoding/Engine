@@ -1,11 +1,19 @@
 package com.Engine.RenderEngine.Window;
 
 import static org.lwjgl.opengl.GL11.GL_VERSION;
+import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL11.glGetString;
 import static org.lwjgl.opengl.GL11.glViewport;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
+import static org.lwjgl.opengl.GL43.GL_DEBUG_OUTPUT;
+import static org.lwjgl.opengl.GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS;
+import static org.lwjgl.opengl.GL43.GL_DEBUG_SEVERITY_HIGH;
+import static org.lwjgl.opengl.GL43.GL_DEBUG_SEVERITY_NOTIFICATION;
+import static org.lwjgl.opengl.GL43.glDebugMessageCallback;
 
 import java.awt.image.BufferedImage;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 
 import org.lwjgl.LWJGLException;
@@ -15,6 +23,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.ContextAttribs;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
+import org.lwjgl.opengl.KHRDebugCallback;
 import org.lwjgl.opengl.PixelFormat;
 
 import com.Engine.Util.Time;
@@ -56,15 +65,14 @@ public class Window {
 		fps = DEFAULT_FPS;
 	}
 	
-	public void initDisplay() throws LWJGLException {
-		initDisplay(DEFAULT_WIDTH, DEFAULT_HEIGHT); }
-	public void initDisplay(int width, int height) throws LWJGLException {
-		initDisplay(width, height, false); }
+	public void initDisplay() throws LWJGLException 					 { initDisplay(DEFAULT_WIDTH, DEFAULT_HEIGHT); }
+	public void initDisplay(int width, int height) throws LWJGLException { initDisplay(width, height, false); }
 	public void initDisplay(int width, int height, boolean forceToSize) throws LWJGLException {
-		if(Display.isCreated()) { destroy(); }
+		if(Display.isCreated()) destroy();
 
 		if(forceToSize) {
 			displayMode = new DisplayMode(width, height);
+			
 		} else {
 			float error = -1;
 			DisplayMode[] modes = Display.getAvailableDisplayModes();
@@ -87,6 +95,34 @@ public class Window {
 		Mouse.create();
 		Keyboard.create();
 //		Controllers.create();
+		
+		setupErrorHandle();
+	}
+	
+	private void setupErrorHandle() {
+		KHRDebugCallback.Handler errorHandlerBeta = null;
+		try {
+			Method getHandler = KHRDebugCallback.class.getDeclaredMethod("getHandler");
+			getHandler.setAccessible(true);
+			errorHandlerBeta = (KHRDebugCallback.Handler) getHandler.invoke(new KHRDebugCallback());
+		} catch(NoSuchMethodException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) { 
+			e.printStackTrace(); 
+		}
+		
+		KHRDebugCallback.Handler errorHandler = errorHandlerBeta;
+		
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(new KHRDebugCallback(new KHRDebugCallback.Handler() {
+			public void handleMessage(int source, int type, int id, int severity, String message) {
+				if(severity == GL_DEBUG_SEVERITY_NOTIFICATION) return;
+				
+				errorHandler.handleMessage(source, type, id, severity, message);
+				
+				if(severity == GL_DEBUG_SEVERITY_HIGH)
+					throw new RuntimeException();
+			}
+		}));
 	}
 	
 	public void update() {

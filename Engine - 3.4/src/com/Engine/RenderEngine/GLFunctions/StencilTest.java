@@ -1,7 +1,6 @@
 package com.Engine.RenderEngine.GLFunctions;
 
 import static org.lwjgl.opengl.GL11.GL_DECR;
-import static org.lwjgl.opengl.GL11.GL_FRONT_FACE;
 import static org.lwjgl.opengl.GL11.GL_INCR;
 import static org.lwjgl.opengl.GL11.GL_INVERT;
 import static org.lwjgl.opengl.GL11.GL_KEEP;
@@ -18,9 +17,6 @@ import static org.lwjgl.opengl.GL11.GL_STENCIL_WRITEMASK;
 import static org.lwjgl.opengl.GL11.GL_ZERO;
 import static org.lwjgl.opengl.GL11.glClearStencil;
 import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glFrontFace;
-import static org.lwjgl.opengl.GL11.glGetInteger;
-import static org.lwjgl.opengl.GL11.glIsEnabled;
 import static org.lwjgl.opengl.GL14.GL_DECR_WRAP;
 import static org.lwjgl.opengl.GL14.GL_INCR_WRAP;
 import static org.lwjgl.opengl.GL20.GL_STENCIL_BACK_FAIL;
@@ -34,49 +30,59 @@ import static org.lwjgl.opengl.GL20.glStencilFuncSeparate;
 import static org.lwjgl.opengl.GL20.glStencilMaskSeparate;
 import static org.lwjgl.opengl.GL20.glStencilOpSeparate;
 
-import com.Engine.RenderEngine.GLFunctions.CullFace.FaceWinding;
+import com.Engine.RenderEngine.GLFunctions.enums.Condition;
+import com.Engine.RenderEngine.GLFunctions.enums.GLFace;
 
 public class StencilTest extends GL_Function {
-	private StencilSet back, front;
-	private FaceWinding winding;
+	private static final StencilTest CURRENT = new StencilTest(); static { CURRENT.syncGLState(); }
+	
+	private StencilSet back = new StencilSet(ValueModifier.Current, ValueModifier.Current, ValueModifier.Current, Condition.Never, 0xFF, 0, 0, GLFace.Back);
+	private StencilSet front = new StencilSet(ValueModifier.Current, ValueModifier.Current, ValueModifier.Current, Condition.Never, 0xFF, 0, 0, GLFace.Front);
+//	private FaceWinding winding;
 	private int clearValue;
+
+	private StencilTest() { }
+	private StencilTest(boolean enabled) { super(enabled); }
 	
-	private StencilTest() { super(); }
-	private StencilTest(boolean skip) { super(skip); }
-	
-	public void push() {
+	protected void _push() {
 		back.push();
 		front.push();
 		
-		if(winding != null) 
-			glFrontFace(winding.getFunction());
 		glClearStencil(clearValue);
+		
+		front.copyTo(CURRENT.front);
+		back.copyTo(CURRENT.back);
+		
+		CURRENT.clearValue = clearValue;
 	}
 
-	public void pull() {
-		StencilSet[] values = StencilSet.pull();
-		this.back = values[0];
-		this.front = values[1];
+	protected void _pull() {
+		this.back = new StencilSet(GLFace.Back);
+		this.front = new StencilSet(GLFace.Front);
 		
-		clearValue = glGetInteger(GL_STENCIL_CLEAR_VALUE);
-		winding = FaceWinding.lookUp(glGetInteger(GL_FRONT_FACE));
+		clearValue = getInt(GL_STENCIL_CLEAR_VALUE);
 	}
+
+	protected StencilTest getLocalCashe() { return CURRENT; }
 
 	protected int getGLCapablity() { return GL_STENCIL_TEST; }
-
-	public GL_Function clone() {
-		StencilTest test = new StencilTest(true);
-			test.back = this.back;
-			test.front = this.front;
-			test.winding = this.winding;
-			test.clearValue = this.clearValue;
-		return test;
+	public StencilTest clone() { return (StencilTest) copyTo(new StencilTest()); }
+	
+	protected StencilTest _copyTo(GL_Function function) {
+		StencilTest stencilTest = (StencilTest) function;
+			this.back.copyTo(stencilTest.back);
+			this.front.copyTo(stencilTest.front);
+			stencilTest.clearValue = this.clearValue;
+		return stencilTest;
 	}
 	
-	public static boolean isEnabled() { return glIsEnabled(GL_STENCIL_TEST); }
+	public static boolean isEnabled() { return CURRENT.enabled; } //glIsEnabled(GL_STENCIL_TEST); }
 	public static void disable() { glDisable(GL_STENCIL_TEST); }
+
+	public static StencilTest blankDisable() { return new StencilTest(false); }
+	public static StencilTest blankEnabled() { return new StencilTest(true); }
 	
-	public static StencilTest current() { return new StencilTest(); }
+	public static StencilTest current() { return new StencilTest(isEnabled()); }
 	
 	public StencilTest setFailOp(ValueModifier fail) 	  { return set(GLFace.Both, fail, null, null, null, -1, -1, -1); }
 	public StencilTest setDepthFailOp(ValueModifier fail) { return set(GLFace.Both, null, fail, null, null, -1, -1, -1); }
@@ -105,11 +111,8 @@ public class StencilTest extends GL_Function {
 	public StencilTest enableWriteMask(GLFace face, boolean enable) { return set(face, null, null, null, null, -1, enable ? 0xFF : 0x00, -1); }
 	
 	public StencilTest setClearValue(int value) { this.clearValue = value; return this; }
-	public StencilTest setFrontFace(FaceWinding winding) { this.winding = winding; return this; }
 	
-	public StencilTest set(GLFace face, ValueModifier fail, ValueModifier depthFail, ValueModifier depthPass, 
-			Condition condition, int mask, int writeMask, int refValue
-	) {
+	public StencilTest set(GLFace face, ValueModifier fail, ValueModifier depthFail, ValueModifier depthPass, Condition condition, int mask, int writeMask, int refValue ) {
 		switch(face) {
 			case Both:
 			case Back:
@@ -144,7 +147,9 @@ public class StencilTest extends GL_Function {
 		return this;
 	}
 	
-	private static class StencilSet {
+	private class StencilSet {
+		public StencilSet(GLFace face) { this.face = face; pull(); }
+		
 		public StencilSet(ValueModifier fail, ValueModifier depthFail, ValueModifier depthPass, 
 				Condition condition, int mask, int writeMask, int refValue, GLFace face
 		) {
@@ -161,7 +166,7 @@ public class StencilTest extends GL_Function {
 
 		ValueModifier fail, depthFail, depthPass;
 		Condition condition; int mask, writeMask, refValue;
-		GLFace face;
+		final GLFace face;
 		
 		public void push() {
 			glStencilFuncSeparate(face.getValue(), condition.getValue(), refValue, mask);
@@ -169,36 +174,45 @@ public class StencilTest extends GL_Function {
 			glStencilMaskSeparate(face.getValue(), writeMask);
 		}
 		
-		public static StencilSet[] pull() {
-			return new StencilSet[] {
+		public StencilSet pull() {
+			return face == GLFace.Back ?
 				new StencilSet(
-					ValueModifier.lookUp(glGetInteger(GL_STENCIL_BACK_FAIL)),
-					ValueModifier.lookUp(glGetInteger(GL_STENCIL_BACK_PASS_DEPTH_FAIL)),
-					ValueModifier.lookUp(glGetInteger(GL_STENCIL_BACK_PASS_DEPTH_PASS)),
+					ValueModifier.lookUp(getInt(GL_STENCIL_BACK_FAIL)),
+					ValueModifier.lookUp(getInt(GL_STENCIL_BACK_PASS_DEPTH_FAIL)),
+					ValueModifier.lookUp(getInt(GL_STENCIL_BACK_PASS_DEPTH_PASS)),
 					
-					Condition.lookUp(glGetInteger(GL_STENCIL_BACK_FUNC)),
+					Condition.lookUp(getInt(GL_STENCIL_BACK_FUNC)),
 					
-					glGetInteger(GL_STENCIL_BACK_VALUE_MASK),
-					glGetInteger(GL_STENCIL_BACK_WRITEMASK),
-					glGetInteger(GL_STENCIL_BACK_REF),
+					getInt(GL_STENCIL_BACK_VALUE_MASK),
+					getInt(GL_STENCIL_BACK_WRITEMASK),
+					getInt(GL_STENCIL_BACK_REF),
 					
 					GLFace.Back
-				),
+				) :
 				
 				new StencilSet(
-					ValueModifier.lookUp(glGetInteger(GL_STENCIL_FAIL)),
-					ValueModifier.lookUp(glGetInteger(GL_STENCIL_PASS_DEPTH_FAIL)),
-					ValueModifier.lookUp(glGetInteger(GL_STENCIL_PASS_DEPTH_PASS)),
+					ValueModifier.lookUp(getInt(GL_STENCIL_FAIL)),
+					ValueModifier.lookUp(getInt(GL_STENCIL_PASS_DEPTH_FAIL)),
+					ValueModifier.lookUp(getInt(GL_STENCIL_PASS_DEPTH_PASS)),
 					
-					Condition.lookUp(glGetInteger(GL_STENCIL_FUNC)),
+					Condition.lookUp(getInt(GL_STENCIL_FUNC)),
 					
-					glGetInteger(GL_STENCIL_VALUE_MASK),
-					glGetInteger(GL_STENCIL_WRITEMASK),
-					glGetInteger(GL_STENCIL_REF),
+					getInt(GL_STENCIL_VALUE_MASK),
+					getInt(GL_STENCIL_WRITEMASK),
+					getInt(GL_STENCIL_REF),
 					
 					GLFace.Front
-				)
-			};
+				);
+		}
+		
+		public void copyTo(StencilSet set) {
+			set.fail = this.fail;
+			set.depthFail = this.depthFail;
+			set.depthPass = this.depthPass;
+			set.condition = this.condition;
+			set.mask = this.mask;
+			set.writeMask = this.writeMask;
+			set.refValue = this.refValue;
 		}
 		
 		public StencilSet clone() {

@@ -1,5 +1,7 @@
 package com.Engine.RenderEngine.Models;
 
+import static com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage.Static_Draw;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -9,7 +11,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
+import com.Engine.RenderEngine.Shaders.Deferred.High.DeferredShader;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Util.RenderStructs.Vertex;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
@@ -98,13 +102,49 @@ public class ModelLoader {
 			
 			center = center.divide(vertexs.size());
 			radius = Math.abs(radius - center.max());
+
+			float[] tangents = new float[vertexs.size() * 3 * (hasTexCoords ? 1 : 0)];
+			if(hasTexCoords) {
+				Vector3f[] vertexTangents = new Vector3f[vertexs.size()];
+				for(int i = 0; i < indicies.size(); i += 3) {
+					int index0 = indicies.get(i + 0);
+					int index1 = indicies.get(i + 1);
+					int index2 = indicies.get(i + 2);
+					
+					Vertex v0 = vertexs.get(index0);
+					Vertex v1 = vertexs.get(index1);
+					Vertex v2 = vertexs.get(index2);
+					
+					Vector3f deltaPos1 = v1.getPosition().subtract(v0.getPosition());
+					Vector3f deltaPos2 = v2.getPosition().subtract(v0.getPosition());
+
+					Vector2f deltaUV1 = v1.getTexCoord().subtract(v0.getTexCoord());
+					Vector2f deltaUV2 = v2.getTexCoord().subtract(v0.getTexCoord());
+					
+					float r = 1 / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+					Vector3f tangent = deltaPos1.multiply(deltaUV2.y).subtract(deltaPos2.multiply(deltaUV1.y)).multiply(r);
+
+					vertexTangents[index0] = vertexTangents[index0] == null ? tangent : vertexTangents[index0].add(tangent);
+					vertexTangents[index1] = vertexTangents[index1] == null ? tangent : vertexTangents[index1].add(tangent);
+					vertexTangents[index2] = vertexTangents[index2] == null ? tangent : vertexTangents[index2].add(tangent);
+				}
+				
+				for(int i = 0; i < vertexTangents.length; i ++) {
+					Vector3f tanget = vertexTangents[i].normalize();
+					
+					tangents[i * 3 + 0] = tanget.x;
+					tangents[i * 3 + 1] = tanget.y;
+					tangents[i * 3 + 2] = tanget.z;
+				}
+			}
 			
 			int[] indiciesArray = new int[indicies.size()];
-			for(int i = 0; i < indicies.size(); i ++)
-				indiciesArray[i] = indicies.get(i);	
+			for(int i = 0; i < indicies.size(); i ++) indiciesArray[i] = indicies.get(i);
 			
-			return loadModel(vertecies, texCoords, normals, indiciesArray, 
-					new boolean[]{false, false, false}, radius, 10000, center);
+			return loadModel(vertecies, texCoords, normals, tangents, indiciesArray, 
+					new BufferUsage[] { Static_Draw, Static_Draw, Static_Draw, Static_Draw },
+					radius, 10000, center
+				);
 
 		} catch(IOException e) {
 			System.err.println("Failed to load Model from: " + filePath);
@@ -114,15 +154,16 @@ public class ModelLoader {
 		return null;
 	}
 	
-	public static ModelData loadModel(float[] vertices, float[] texCoords, float[] normals, int[] indicies,
-			boolean[] dynamic, float radius, float renderDistance, Vector3f center) {
+	public static ModelData loadModel(float[] vertices, float[] texCoords, float[] normals, float[] tangents, int[] indicies,
+			BufferUsage[] usages, float radius, float renderDistance, Vector3f center) {
 		
 		ModelData modelData = new ModelData(radius, renderDistance, center);
 
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, vertices, dynamic[0]);
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_TEXCOORDS, 2, texCoords, dynamic[1]);
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_NORMALS, 3, normals, dynamic[2]);
-		modelData.loadIndicies(indicies);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, vertices, usages[0]);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_TEXCOORDS, 2, texCoords, usages[1]);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_NORMALS, 3, normals, usages[2]);
+		modelData.storeDataInAttributeList(DeferredShader.ATTRIBUTE_LOC_TANGENT, 3, tangents, usages[3]);
+		modelData.loadIndices(indicies);
 		
 		return modelData;
 	}

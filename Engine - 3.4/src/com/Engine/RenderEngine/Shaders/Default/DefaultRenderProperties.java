@@ -1,6 +1,6 @@
 package com.Engine.RenderEngine.Shaders.Default;
 
-import com.Engine.RenderEngine.Shaders.RenderProperties;
+import com.Engine.RenderEngine.Shaders.Render.RenderProperties;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 
 public class DefaultRenderProperties extends RenderProperties {

@@ -53,6 +53,7 @@ public class DefaultXMLParsers {
 		public Float parse(String s) { 
 			try {
 				if(s.endsWith("d") || s.endsWith("D")) throw new XMLParserFormatException();
+				if(s.indexOf('.') < 0) throw new XMLParserFormatException();
 				return Float.parseFloat(s);
 			} catch(NumberFormatException e) { throw new XMLParserFormatException(); }
 		}
@@ -66,6 +67,7 @@ public class DefaultXMLParsers {
 		public Double parse(String s) { 
 			try {
 				if(!s.endsWith("d") || !s.endsWith("D")) throw new XMLParserFormatException();
+				if(s.indexOf('.') < 0) throw new XMLParserFormatException();
 				return Double.parseDouble(s); 
 			} catch(NumberFormatException e) { throw new XMLParserFormatException(); }
 		}

@@ -1,7 +1,7 @@
 package com.Engine.RenderEngine.Particles;
 
+import com.Engine.RenderEngine.Camera.Camera;
 import com.Engine.RenderEngine.Particles.Texture.ParticleTexture;
-import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class Particle {

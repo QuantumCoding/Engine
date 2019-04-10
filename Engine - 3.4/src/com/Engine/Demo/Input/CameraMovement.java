@@ -3,7 +3,7 @@ package com.Engine.Demo.Input;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import com.Engine.RenderEngine.Util.Camera;
+import com.Engine.RenderEngine.Camera.Camera;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class CameraMovement {
@@ -27,6 +27,9 @@ public class CameraMovement {
 	public void update(float delta) {
 		Vector3f caped = camera.getRotation().capMax(100).capMin(-100);
 		camera.setRotX(caped.x);
+		
+		float movementSpeed = this.movementSpeed * (Keyboard.isKeyDown(Keyboard.KEY_Q) ? 4 : 1);
+		float jumpSpeed = this.jumpSpeed * (Keyboard.isKeyDown(Keyboard.KEY_Q) ? 4 : 1);
 		
 		if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE) && !escapeLastFrame){
 			Mouse.setGrabbed(!Mouse.isGrabbed());
@@ -58,10 +61,6 @@ public class CameraMovement {
 		}
 		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)){
 			camera.moveUp(-jumpSpeed * delta);
-		}
-		
-		if(Keyboard.isKeyDown(Keyboard.KEY_P)) {
-			camera.setRotation(new Vector3f(0, 45, 0));
 		}
 		
 		if(Mouse.isGrabbed()){

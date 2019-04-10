@@ -107,7 +107,7 @@ public class TextureMap {//							 124, 23, 42
 		}}
 		
 		buffer.flip();
-		textureMap = new Texture2D(buffer, new Vector2f(imageSize));
+		textureMap = new Texture2D(false, buffer, new Vector2f(imageSize));
 		try{
 			ImageIO.write(image, "PNG", new File("C:\\Users\\Joshua\\Desktop\\TextureMapComposit.png"));
 		}catch(IOException e) {e.printStackTrace();}

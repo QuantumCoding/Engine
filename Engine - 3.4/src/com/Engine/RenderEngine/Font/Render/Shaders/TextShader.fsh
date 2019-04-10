@@ -7,8 +7,8 @@ out vec4 out_colour;
 uniform sampler2DArray texture0;
 uniform vec4 colour;
 
-const float width = .53;
-const float edge = .2;
+const float width = .50;
+const float edge = .1;
 
 void main(void) {
 	vec4 textSample = texture(texture0, texCoord.xyz);

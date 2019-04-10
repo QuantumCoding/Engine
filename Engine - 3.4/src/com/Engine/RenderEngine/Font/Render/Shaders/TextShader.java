@@ -2,8 +2,8 @@ package com.Engine.RenderEngine.Font.Render.Shaders;
 
 import com.Engine.RenderEngine.Font.Render.TextMesh;
 import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
-import com.Engine.RenderEngine.Shaders.Renderer;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Shaders.Render.Renderer;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 
 public abstract class TextShader extends Shader {
 	public TextShader(String vsFilePath, String fsFilePath, Class<? extends Renderer<?, ?, ?>> rendererClass) {
@@ -11,8 +11,6 @@ public abstract class TextShader extends Shader {
 	}
 	
 	protected void bindAttributies() {
-		bind();
-		
 		super.bindAttribute(ATTRIBUTE_LOC_POSITIONS, "position");
 		super.bindAttribute(ATTRIBUTE_LOC_TEXCOORDS, "texCoord_in");
 	}

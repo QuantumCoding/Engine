@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import com.Engine.RenderEngine.Shaders.UniformType;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformImage.AccessQualifier;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
@@ -16,4 +17,6 @@ public @interface Uniform {
 	String value() default "";
 	int index() default 0;
 	int size() default 1;
+		
+	AccessQualifier access() default AccessQualifier.READ_WRITE;
 }

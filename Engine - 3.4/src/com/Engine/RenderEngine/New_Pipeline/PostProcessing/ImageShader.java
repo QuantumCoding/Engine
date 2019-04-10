@@ -1,7 +1,7 @@
 package com.Engine.RenderEngine.New_Pipeline.PostProcessing;
 
-import com.Engine.RenderEngine.Shaders.Renderer;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Shaders.Render.Renderer;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 
 public abstract class ImageShader extends Shader {
 	public ImageShader(String vsFilePath, String fsFilePath) {

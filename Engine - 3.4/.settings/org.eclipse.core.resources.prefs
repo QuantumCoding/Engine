@@ -1,0 +1,3 @@
+eclipse.preferences.version=1
+encoding//src/com/Engine/RenderEngine/Shaders/Deferred/High/DeferredShader.java=UTF-8
+encoding//src/com/Engine/RenderEngine/Shaders/Deferred/Low/LowForwardShader.java=UTF-8

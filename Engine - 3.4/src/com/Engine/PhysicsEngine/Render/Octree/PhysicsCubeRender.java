@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
 import com.Engine.RenderEngine.Shaders.Default.Model;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class PhysicsCubeRender extends Model {
@@ -34,8 +35,8 @@ public class PhysicsCubeRender extends Model {
 		for(int i = 0; i < indices.size(); i ++)
 			ind[i] = indices.get(i).intValue();
 		
-		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, data, false);
-		modelData.loadIndicies(ind);
+		modelData.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 3, data, BufferUsage.Static_Draw);
+		modelData.loadIndices(ind);
 	}
 	
 	private void addAABB(Vector3f r, Vector3f c, HashMap<Vector3f, Integer> map, ArrayList<Vector3f> v, ArrayList<Integer> i) {

@@ -1,7 +1,7 @@
 package com.Engine.RenderEngine.Particles.Render;
 
 import com.Engine.RenderEngine.Particles.Texture.ParticleTexture;
-import com.Engine.RenderEngine.Shaders.RenderProperties;
+import com.Engine.RenderEngine.Shaders.Render.RenderProperties;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.Util.Vectors.Vector2f;
 

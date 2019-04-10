@@ -1,9 +1,9 @@
 package com.Engine.PhysicsEngine.Render;
 
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformMat4;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformVec3;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformMat4;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformVec3;
 
 public class PhysicsShader extends Shader {
 	private static final String VERTEX_SHADER_LOC = "PhysicsSphereShader.vsh";
@@ -20,8 +20,6 @@ public class PhysicsShader extends Shader {
 	}
 
 	protected void bindAttributies() {
-		bind();
-		
 		super.bindAttribute(ATTRIBUTE_LOC_POSITIONS, "position");
 	}
 }

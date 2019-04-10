@@ -5,11 +5,11 @@ import org.lwjgl.util.vector.Matrix4f;
 import com.Engine.RenderEngine.Font.Render.TextMesh;
 import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
 import com.Engine.RenderEngine.Font.Render.TextRenderer;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Shaders.Uniforms.Uniform;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformMat4;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformTexture;
-import com.Engine.RenderEngine.Shaders.Uniforms.UniformVec4;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformMat4;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformTexture;
+import com.Engine.RenderEngine.Shaders.Uniforms.Types.UniformVec4;
 import com.Engine.Util.Vectors.MatrixUtil;
 
 public class TextBillboardShader extends TextShader {

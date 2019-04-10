@@ -1,6 +1,6 @@
 package com.Engine.PhysicsEngine.Render;
 
-import com.Engine.RenderEngine.Shaders.RenderProperties;
+import com.Engine.RenderEngine.Shaders.Render.RenderProperties;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.Util.Vectors.Vector3f;
 

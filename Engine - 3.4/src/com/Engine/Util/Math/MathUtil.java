@@ -52,4 +52,7 @@ public class MathUtil {
 	    
 	    return new float[] { root1, root2 };
 	}
+	
+	public static double log(double value, double base) { return Math.log(value) / Math.log(base); }
+	public static double log2(double value) { return log(value, 2); }
 }

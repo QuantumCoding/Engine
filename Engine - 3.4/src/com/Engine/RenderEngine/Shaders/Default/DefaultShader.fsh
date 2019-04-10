@@ -12,8 +12,13 @@ out vec4 color_out;
 
 uniform sampler2D texture0;
 
-uniform vec3 lightColor[LIGHT_COUNT];
-uniform vec3 lightAttenuation[LIGHT_COUNT];
+struct Light {
+	vec3 color;
+	vec3 psoition;
+	vec3 attenuation;
+};
+
+uniform Light lights[LIGHT_COUNT];
 uniform float shineDamper;
 uniform float reflectivity;
 uniform vec3 skyColor;
@@ -27,7 +32,7 @@ void main(void) {
 	
 	for(int i = 0; i < LIGHT_COUNT; i ++) {
 		float distanceToLight = length(toLightVector[i]);
-		float attFactor = lightAttenuation[i].x + (lightAttenuation[i].y * distanceToLight) + (lightAttenuation[i].z * distanceToLight * distanceToLight);
+		float attFactor = lights[i].attenuation.x + (lights[i].attenuation.y * distanceToLight) + (lights[i].attenuation.z * distanceToLight * distanceToLight);
 		
 		vec3 unitLightVector = normalize(toLightVector[i]);		
 		float nDotl = dot(unitNormal, unitLightVector);
@@ -40,8 +45,8 @@ void main(void) {
 		specularFactor = max(specularFactor, 0.0);
 		float dampedFactor = pow(specularFactor, shineDamper);
 		
-		totalDiffuse = totalDiffuse + (brightness * lightColor[i]) / attFactor;
-		totalSpecular = totalSpecular + (dampedFactor * reflectivity * lightColor[i]) / attFactor;
+		totalDiffuse = totalDiffuse + (brightness * lights[i].color) / attFactor;
+		totalSpecular = totalSpecular + (dampedFactor * reflectivity * lights[i].color) / attFactor;
 	}
 	
 	totalDiffuse = max(totalDiffuse, 0.1);

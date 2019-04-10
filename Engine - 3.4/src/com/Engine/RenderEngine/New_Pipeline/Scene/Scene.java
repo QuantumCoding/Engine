@@ -6,10 +6,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.Engine.RenderEngine.Camera.Camera;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
-import com.Engine.RenderEngine.Shaders.Renderer;
-import com.Engine.RenderEngine.Shaders.Shader;
-import com.Engine.RenderEngine.Util.Camera;
+import com.Engine.RenderEngine.Shaders.Render.Renderer;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.Util.Vectors.Vector3f;
 
 public class Scene {
@@ -23,10 +23,10 @@ public class Scene {
 		
 		FBO.clear_bound();
 
-		Shader.setProjectionMatrix(camera.getPorjectionMatrix());
+		Shader.setProjectionMatrix(camera.getProjectionMatrix());
 		Shader.setViewMatrix(camera.getViewMatrix());
 		
-		for(Iterator<Renderer<?, ?, ?>> iter = renderers.iterator(); iter.hasNext();) {
+		for(Iterator<Renderer<?, ?, ?>> iter = renderers.iterator(); iter.hasNext(); ) {
 			Renderer<?, ?, ?> renderer = iter.next();
 			renderer.render(camera);
 		}

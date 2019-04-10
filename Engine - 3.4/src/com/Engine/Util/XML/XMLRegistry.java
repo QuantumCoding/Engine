@@ -1,11 +1,13 @@
 package com.Engine.Util.XML;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class XMLRegistry {
 	private XMLRegistry() { }
 	
 	static final HashMap<Class<?>, XMLTypeParser<?>> PARSERS = new HashMap<>();
+	static final ArrayList<XMLTypeParser<?>> PARSERS_ORDER = new ArrayList<>();
 	static final HashMap<Character, String> ESCAPE_CODES = new HashMap<>();
 	static final HashMap<String, Character> ESCAPE_REVERT = new HashMap<>();
 	
@@ -25,5 +27,6 @@ public class XMLRegistry {
 	
 	public static <E> void redgisterParser(Class<E> clazz, XMLTypeParser<E> parser) {
 		PARSERS.put(clazz, parser);
+		PARSERS_ORDER.add(parser);
 	}
 }

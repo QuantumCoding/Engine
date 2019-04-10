@@ -1,6 +1,6 @@
 package com.Engine.RenderEngine.Font.Render;
 
-import com.Engine.RenderEngine.Shaders.RenderProperties;
+import com.Engine.RenderEngine.Shaders.Render.RenderProperties;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.Util.Vectors.Vector4f;
 
@@ -13,6 +13,8 @@ public class TextRenderProperties extends RenderProperties {
 	}
 	
 	public Vector4f getColour() { return colour; }
+	
+	public void setColour(Vector4f colour) { this.colour = colour; }
 	
 	public RenderProperties clone() { return new TextRenderProperties(getTransform(), colour); }
 }

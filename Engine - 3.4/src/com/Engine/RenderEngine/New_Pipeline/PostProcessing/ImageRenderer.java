@@ -7,17 +7,21 @@ import static org.lwjgl.opengl.GL11.glDrawArrays;
 import static org.lwjgl.opengl.GL11.glEnable;
 
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
-import com.Engine.RenderEngine.Shaders.Shader;
+import com.Engine.RenderEngine.Models.ModelData.VBO.BufferUsage;
+import com.Engine.RenderEngine.New_Pipeline.PostProcessing.Plain.PlainShader;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Textures.Texture;
 
 public class ImageRenderer {
+	public static final PlainShader PLAIN_SHADER = new PlainShader();
+	
 	private static final float[] VERTICIES = { 
 		-1,1,	-1,-1,	
 		 1,1,	 1,-1
 	};
 	
 	private static final ModelData MODEL = new ModelData();
-	static { MODEL.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICIES, false); }
+	static { MODEL.storeDataInAttributeList(Shader.ATTRIBUTE_LOC_POSITIONS, 2, VERTICIES, BufferUsage.Static_Draw); }
 	
 	public static void prepOpenGL() {
 		glDisable(GL_DEPTH_TEST);

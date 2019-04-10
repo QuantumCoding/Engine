@@ -1,26 +1,28 @@
 package com.Engine.Demo;
 
+import static org.lwjgl.opengl.GL11.GL_BACK_LEFT;
+
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.input.Keyboard;
 
 import com.Engine.Demo.Input.CameraMovement;
 import com.Engine.Demo.MultiRender.MultiModel;
 import com.Engine.Demo.MultiRender.MultiShader;
 import com.Engine.Demo.OrthoTesting.OrthoModel;
-import com.Engine.Demo.OrthoTesting.OrthoRenderProperties;
 import com.Engine.Demo.TestImageDrawer.TestImageShader;
 import com.Engine.Demo.particles.ParticleEmitter;
+import com.Engine.RenderEngine.Camera.Camera;
+import com.Engine.RenderEngine.Camera.PerspectiveCamera;
 import com.Engine.RenderEngine.Font.Font;
 import com.Engine.RenderEngine.Font.TextMeshStitcher;
 import com.Engine.RenderEngine.Font.Render.TextMesh;
-import com.Engine.RenderEngine.Font.Render.TextRenderProperties;
 import com.Engine.RenderEngine.GLFunctions.BlendFunc;
 import com.Engine.RenderEngine.GLFunctions.CullFace;
 import com.Engine.RenderEngine.GLFunctions.DepthTest;
-import com.Engine.RenderEngine.Lights.Light;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO_Types.Attachment;
@@ -29,17 +31,16 @@ import com.Engine.RenderEngine.New_Pipeline.FBO.RenderTexture;
 import com.Engine.RenderEngine.New_Pipeline.Scene.Scene;
 import com.Engine.RenderEngine.Particles.ParticleManager;
 import com.Engine.RenderEngine.Particles.Texture.ParticleTexture;
-import com.Engine.RenderEngine.Shaders.Shader;
 import com.Engine.RenderEngine.Shaders.Default.DefaultRenderProperties;
 import com.Engine.RenderEngine.Shaders.Default.DefaultShader;
+import com.Engine.RenderEngine.Shaders.Default.Light;
 import com.Engine.RenderEngine.Shaders.Default.Model;
+import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.Textures.Texture2D;
-import com.Engine.RenderEngine.Util.Camera;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.RenderEngine.Window.Window;
 import com.Engine.Util.Vectors.Vector2f;
 import com.Engine.Util.Vectors.Vector3f;
-import com.Engine.Util.Vectors.Vector4f;
 
 public class SceneTester {
 	public static Camera camera;
@@ -49,10 +50,10 @@ public class SceneTester {
 		window.initDisplay(600, 600, false);
 		window.setFPS(120);
 		
-		SceneTester.camera = new Camera(70, window.getAspectRatio(), 0.3f, 1000);
-		Camera camera = new Camera(70, window.getAspectRatio(), 0.3f, 1000);
+		SceneTester.camera = new PerspectiveCamera(70, window.getAspectRatio(), 0.3f, 1000);
+		PerspectiveCamera camera = new PerspectiveCamera(70, window.getAspectRatio(), 0.3f, 1000);
 		CameraMovement movement = new CameraMovement(camera, 5f, 1.5f, 0.1f);
-		camera.setY(0.5f);
+		camera.setY(2f);
 		
 		MultiShader multiShader = new MultiShader();
 		DefaultShader defaultShader = new DefaultShader();
@@ -81,14 +82,14 @@ public class SceneTester {
 		floorModel.setShader(defaultShader);
 		floorModel.setTexture(tableTexture);
 
-		OrthoModel orthoModel = new OrthoModel();
+//		OrthoModel orthoModel = new OrthoModel();
 		
 // ------------------------------------------- Particles -------------------------------------------------- \\
 		
 		ParticleManager particleManager = new ParticleManager();
 		ParticleTexture particleTexture = ParticleTexture.getRegistry().registerTexture(4, RenderTester.class.getResource("/textures/ParticleD.png"));
 		ParticleTexture.getRegistry().compressTexture();
-		ParticleEmitter emitter = new ParticleEmitter(particleManager, new Vector3f(0, 2, -5), particleTexture, 0.025f);
+		ParticleEmitter emitter = new ParticleEmitter(particleManager, new Vector3f(0, 2, -5), particleTexture, 0.05f);
 		particleTexture.setAdditvieBlending(true);
 
 // ------------------------------------------- Text -------------------------------------------------- \\
@@ -97,8 +98,8 @@ public class SceneTester {
 		TextMesh mesh = TextMeshStitcher.createMesh("THis is a TEST to see how long this thing can be :) 1928374650", 
 				font, 5, window.getAspectRatio(), new Vector2f(2.5f, .75f));
 		
-		TextMesh mesh2D = TextMeshStitcher.createMesh("Bottom of the Screen! It Can also Be Centered", 
-				font, 16f * 1/TextMeshStitcher.DEFUALT_LINE_HEIGHT, window.getAspectRatio(), new Vector2f(window.getWidth() / 3, -1));
+		TextMesh mesh2D = TextMeshStitcher.createMesh("Bottom of the Screen!", 
+				font, 16f * 1/TextMeshStitcher.DEFUALT_LINE_HEIGHT, window.getAspectRatio(), new Vector2f(window.getWidth() / 3 * 2, -1));
 		
 		mesh2D.setShader(Font.Text2DShader);
 		
@@ -135,7 +136,9 @@ public class SceneTester {
 		
 // ------------------------------------------ Loop --------------------------------------------------- \\
 		
-		float time = 0;
+		Keyboard.enableRepeatEvents(true);
+		
+		double time = 0;
 		double frameTimeAvg = 0.0;
 		int frameAvgCounter = 0;	
 		while(!window.isCloseRequested()) {
@@ -186,7 +189,7 @@ public class SceneTester {
 			
 			multiFBO.bindDraw(); 
 				FBO.allowMasterAccess(false); multiFBO.clear();
-				defualtDepth.enable(); defaultCull.enable(); defaultBlend.enable();
+				defualtDepth.push(); defaultCull.push(); defaultBlend.push();
 				defaultShader.bind(); defaultShader.loadLights(followLight, glowLight); //light
 				
 				defaultShader.getRenderer().clear();
@@ -194,7 +197,7 @@ public class SceneTester {
 				scene.render(camera, defaultShader.getRenderer());
 				
 				defaultShader.getRenderer().usingFrustumCulling(true);
-				defaultShader.getRenderer().clear(); cubeCull.enable();
+				defaultShader.getRenderer().clear(); cubeCull.push();
 				cubeModel.render(new DefaultRenderProperties(new Transform(new Vector3f(1.5f, .55, -5), null, new Vector3f(.5f)),
 						100, .15f, 0));
 				scene.render(camera, defaultShader.getRenderer());
@@ -205,19 +208,22 @@ public class SceneTester {
 //						new Vector4f(.75f, .6f, .1f, 1)));
 //				mesh2D.render(new TextRenderProperties(new Transform(new Vector3f(window.getWidth() / 2, window.getHeight() / 2, 1), null, new Vector3f(1)), 
 //						new Vector4f(.95f, .3f, .1f, 1)));
-				mesh2D.render(new TextRenderProperties(new Transform(
-						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight() - mesh2D.getSize().y, .5), 
-						null, 
-						new Vector3f(1, -1, 1)), 
-						new Vector4f(.75f, .6f, .1f, 1)));
+//				mesh2D.render(new TextRenderProperties(new Transform(
+//						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight(), .5), 
+//						null, 
+//						new Vector3f(1, 1, 1)), 
+//						new Vector4f(.75f, .6f, .1f, 1)));
 //				scene.render(camera, /*mesh.getShader().getRenderer(),*/ mesh2D.getShader().getRenderer());
 				
-				orthoModel.render(new OrthoRenderProperties(new Transform(
-						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight() - mesh2D.getSize().y, .5).add(new Vector3f(mesh2D.getSize(), 0).divide(2)), 
-						null, new Vector3f(mesh2D.getSize(), 1))));
+//				orthoModel.render(new OrthoRenderProperties(new Transform(
+//						new Vector3f((window.getWidth() - mesh2D.getSize().x) / 2, window.getHeight() - mesh2D.getSize().y, .5).add(new Vector3f(mesh2D.getSize(), 0).divide(2)), 
+//						null, new Vector3f(mesh2D.getSize(), 1))));
 				scene.render(camera, OrthoModel.RENDERER, mesh2D.getShader().getRenderer());
 				
-				defaultCull.enable();
+//				UIModel.drawRect(100, 100, 250, 250);
+//				scene.render(camera, UIModel.RENDERER);
+				
+				defaultCull.push();
 				scene.render(camera, ParticleManager.ParticleShader.getRenderer());
 				FBO.allowMasterAccess(true);
 			FBO.unbindDraw(); 
@@ -281,7 +287,7 @@ public class SceneTester {
 		// ---------------------------- Resolve to FBO ---------------------------- \\
 		// ---------------------------- -------------- ---------------------------- \\
 			
-			multiFBO.resolve();
+			multiFBO.resolve(null, 0, GL_BACK_LEFT);
 
 		// ---------------------------- ----------------- ---------------------------- \\
 		// ---------------------------- Update the Window ---------------------------- \\
