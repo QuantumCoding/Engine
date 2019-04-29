@@ -11,7 +11,7 @@ import static org.lwjgl.opengl.GL32.GL_TEXTURE_CUBE_MAP_SEAMLESS;
 import static org.lwjgl.opengl.GL40.GL_TEXTURE_CUBE_MAP_ARRAY;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
@@ -40,7 +40,8 @@ import com.Engine.RenderEngine.Particles.Texture.ParticleTexture;
 import com.Engine.RenderEngine.Shaders.Deferred.DeferredRenderProperties;
 import com.Engine.RenderEngine.Shaders.Deferred.DeferredRenderingSystem;
 import com.Engine.RenderEngine.Shaders.Deferred.PBRModel;
-import com.Engine.RenderEngine.Shaders.Deferred.Lights.SpotLight;
+import com.Engine.RenderEngine.Shaders.Deferred.Lights.DirectionalLight;
+import com.Engine.RenderEngine.Shaders.Deferred.Lights.PointLight;
 import com.Engine.RenderEngine.Shaders.Render.Shader;
 import com.Engine.RenderEngine.System.RenderOrderController;
 import com.Engine.RenderEngine.System.RenderSceneInfo;
@@ -54,7 +55,6 @@ import com.Engine.RenderEngine.Textures.TextureCubeMapArray;
 import com.Engine.RenderEngine.Util.BasicRenderingSystem;
 import com.Engine.RenderEngine.Util.RenderStructs.Transform;
 import com.Engine.RenderEngine.Window.Window;
-import com.Engine.Util.Vectors.MatrixUtil;
 import com.Engine.Util.Vectors.Vector3f;
 
 // TODO: Add different types of Lights
@@ -167,8 +167,14 @@ public class RenderSystemTesting {
 		ModelInstance<PBRModel, DeferredRenderProperties> lampToken = pbrLampModel.render(new DeferredRenderProperties(
 				new Transform(new Vector3f(0, 3, -10), Vector3f.random(360), new Vector3f(1)), 1));
 		
-		prbBackWall.render(new DeferredRenderProperties(
-				new Transform(new Vector3f(0, 25, -5), new Vector3f(90, 0, 0), new Vector3f(5, 1, 1)), 0));
+		ModelInstance<PBRModel, DeferredRenderProperties> glowToken = pbrLampModel.render(new DeferredRenderProperties(
+				new Transform(new Vector3f(0, 3, -10), Vector3f.random(360), new Vector3f(.1f)), 0));
+		
+//		prbBackWall.render(new DeferredRenderProperties(
+//				new Transform(new Vector3f(0, 25, -5), new Vector3f(90, 0, 0), new Vector3f(5, 1, 1)), 0));
+		
+		pbrFloorModel.render(new DeferredRenderProperties(
+				new Transform(null, new Vector3f(), new Vector3f(1))));
 		
 		skybox.render(new SkyboxRenderProperties());
 		
@@ -193,12 +199,12 @@ public class RenderSystemTesting {
 		
 // ------------------------------------------ Lights --------------------------------------------------- \\
 
-		SpotLight spotLight = new SpotLight(camera.getPosition(), new Vector3f(10, 0, 0), new Vector3f(50, 0, 0), MatrixUtil.forward(camera.getViewMatrix()), 0.005f);
-//		DirectionalLight sunLight = new DirectionalLight(new Vector3f(.25, 10, 1),  new Vector3f(89, 136, 140).divide(255));
-//		PointLight glowLight = new PointLight(emitter.getPosition(), new Vector3f(1, .75, .5), new Vector3f(5, 8, 1)); // 2.4, 0.1f, 10
+//		SpotLight spotLight = new SpotLight(camera.getPosition(), new Vector3f(10, 0, 0), new Vector3f(50, 0, 0), MatrixUtil.forward(camera.getViewMatrix()), 0.005f);
+		DirectionalLight sunLight = new DirectionalLight(new Vector3f(.25, 10, 1),  new Vector3f(89, 136, 140).divide(255));
+		PointLight glowLight = new PointLight(emitter.getPosition(), new Vector3f(1, .75, .5), new Vector3f(5, 8, 1)); // 2.4, 0.1f, 10
 		float exposure = 5;
 		
-		spotLight.setFalloffAngle(.05f);
+//		spotLight.setFalloffAngle(.05f);
 		
 // ------------------------------------------ GL Tests / Functions  --------------------------------------------------- \\
 
@@ -232,23 +238,25 @@ public class RenderSystemTesting {
 			
 			time += window.getFrameTime();
 			emitter.setPosition(emitter.getPosition().setY((float) Math.sin(time * 2) / 3 + 2));
-
-//			glowLight.setPosition(emitter.getPosition());
+			glowToken.propreties.getTransform().setTranslation(emitter.getPosition());
+			glowToken.propreties.getTransform().rotate(Vector3f.random(5));
+			glowLight.setPosition(emitter.getPosition());
 			
 			exposure += Mouse.getDWheel() / 1200f;
 			if(exposure < 0) exposure = 0;
 			
-			if(Keyboard.isKeyDown(Keyboard.KEY_E)) {
-				spotLight.setDirection(MatrixUtil.forward(camera.getViewMatrix()));
-				spotLight.setPosition(camera.getPosition());
-			}
+//			if(Keyboard.isKeyDown(Keyboard.KEY_E)) {
+//				spotLight.setDirection(MatrixUtil.forward(camera.getViewMatrix()));
+//				spotLight.setPosition(camera.getPosition());
+//			}
 			
 		// ---------------------------- --------------- ---------------------------- \\
 		//	--------------------------- Update Uniforms ---------------------------- \\		
 		// ---------------------------- --------------- ---------------------------- \\
 			
 			deferredShader.setExposure(exposure);
-			deferredShader.setLights(Collections.singleton(spotLight));
+//			deferredShader.setLights(Collections.singleton(spotLight));
+			deferredShader.setLights(Arrays.asList(sunLight, glowLight));
 //			deferredShader.setEnvironmentMap(skyboxTextureArray); // Use Skybox for all passes but last
 			deferredShader.setEnvironmentMapCap(0);
 			

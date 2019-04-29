@@ -50,7 +50,8 @@ public class ModelData {
 		
 		_bind();
 			vbo.bind();
-			glVertexAttribPointer(attribute.getId(), dataSize, GL_FLOAT, false, packFloatCount * 4, offset * 4);
+				attribute.enable();
+				glVertexAttribPointer(attribute.getId(), dataSize, GL_FLOAT, false, packFloatCount * 4, offset * 4);
 			vbo.unbind();
 		_unbind();
 	}
@@ -81,13 +82,13 @@ public class ModelData {
 	public void bind() {
 		_bind();
 		
-		for(Attribute attribute : attributes.keySet())
-			attribute.enable();
+//		for(Attribute attribute : attributes.keySet())
+//			attribute.enable();
 	}
 	
 	public void unbind() {
-		for(Attribute attribute : attributes.keySet())
-			attribute.disable();
+//		for(Attribute attribute : attributes.keySet())
+//			attribute.disable();
 		
 		_unbind();
 	}
