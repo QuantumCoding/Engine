@@ -37,6 +37,7 @@ import com.Engine.RenderEngine.GLFunctions.StencilTest;
 import com.Engine.RenderEngine.GLFunctions.StencilTest.ValueModifier;
 import com.Engine.RenderEngine.GLFunctions.enums.Condition;
 import com.Engine.RenderEngine.GLFunctions.enums.GLFace;
+import com.Engine.RenderEngine.Lights.Light;
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO_Types.Attachment;

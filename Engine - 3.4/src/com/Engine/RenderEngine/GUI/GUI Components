@@ -1,0 +1,129 @@
+UI Components:
+	 - Buttons
+	 	- Toggle Buttons
+	 		- Radio Buttons
+	 		- Check Boxes
+	 		
+	 		- Button Groups
+	 		
+	 - Combo Box / Dropdown
+	 	- Editable Combo Box
+	 	
+	 - Text Field
+	 	- Formatted Text Field
+	 	- Text Area
+	 	- Password Field
+	 	
+	 - Label
+	 	- Label Area (Drivable Text)
+	 - Image
+	 
+	 - Spinner (Number)
+	 
+	 - Scroll Bars (Horizontal / Vertical)
+	 - Progress Bar (Horizontal / Vertical)
+	 	- Round... Indicator 
+	 	- Sliders 
+	 		- Range Slider
+	 
+	 - Borders (Width/Height base Scale)
+	 
+	 - Panel
+	 	- Scroll Panels
+	 	- Tab Panels
+	 	
+	 	- Layouts:
+	 		- Vertical Box Layout
+	 		- Horizontal Box Layout
+	 		- Grid Layout
+	 			- Uneven Grid
+	 		- Relative
+	 		- (None)
+	 
+	 - Colour Pickers
+	 
+	 - Graphs
+	 	- Line
+	 	- Bar
+	 	- Pie
+	 
+	 - Guhhhhh....
+		- Table
+	 	- Tree
+	 	- Table-Tree
+	 	
+UI Animation:
+	- Driver 
+		- Min - Max Range
+		- Time Span
+		- calculate (int time)
+		
+	- X, Y
+	- Scale X, Y
+	- Rotation
+	
+UI Events:
+	- External:
+		- Activate
+	
+	- Internal:
+		- Mouse Entered
+		- Mouse Over
+		- Mouse Exit
+		
+		- Clicked
+		- Mouse Pressed
+		- Mouse Released
+				
+		- Scroll (Value)
+		
+		- Key Pressed (Fires Continuously)
+		- Key Released (Fires Once)
+		- Key Typed (Fires once)
+	
+	- Focusable Components
+		- Default Direction movement
+		- Default Key Activation
+
+Activatable Component:
+	- Action Preformed
+	- Add Listener
+	- Maco-Activation
+
+Standard Properties:
+	- Prefered:
+		- X, Y
+		- Width, Height
+		
+	- Actual:
+		- X, Y
+		- Width, Height	
+		
+	- Weight:	
+		- Width, Height	
+		
+	- Parent Container
+	
+	- Focus
+	- Focusable
+	- All Event types
+	
+	- Visible
+	- Enabled / Disabled	 
+	
+	- Tool Tip
+	
+UI Manager (Look-Feel):
+	- Style
+		- Texture Sheet
+		- Texture Coords.
+		- Texture Dimension
+		- Relative Class
+		
+		- Background
+		
+UI Style: Provides all visual information about a UIComponent
+	- Given a <T> -> List of properly textured UIRenderProperties
+		
+	 
+	 	

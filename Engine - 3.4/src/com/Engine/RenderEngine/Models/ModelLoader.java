@@ -145,7 +145,6 @@ public class ModelLoader {
 					new BufferUsage[] { Static_Draw, Static_Draw, Static_Draw, Static_Draw },
 					radius, 10000, center
 				);
-
 		} catch(IOException e) {
 			System.err.println("Failed to load Model from: " + filePath);
 			e.printStackTrace();

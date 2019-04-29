@@ -3,6 +3,7 @@ package com.Engine.RenderEngine.Font.Render;
 import java.util.ArrayList;
 
 import com.Engine.RenderEngine.Font.Font;
+import com.Engine.RenderEngine.Font.Render.Shaders.TextBillboardShader;
 import com.Engine.RenderEngine.Models.ModelData.ModelData;
 import com.Engine.RenderEngine.Shaders.Render.IRenderable;
 import com.Engine.RenderEngine.System.RenderingSystem;
@@ -54,6 +55,7 @@ public class TextMesh implements IRenderable<TextRenderProperties> {
 
 	public float getLineHeight() { return lineHeight; }
 	public RenderingSystem<TextMesh, TextRenderProperties> getShader() { return shader; }
+
 	public ModelData getModelData() { return mesh; }
 	public Vector2f getSize() { return size; }
 	

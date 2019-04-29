@@ -23,6 +23,11 @@ import com.Engine.RenderEngine.Font.Render.TextMesh;
 import com.Engine.RenderEngine.GLFunctions.BlendFunc;
 import com.Engine.RenderEngine.GLFunctions.CullFace;
 import com.Engine.RenderEngine.GLFunctions.DepthTest;
+<<<<<<< HEAD
+=======
+import com.Engine.RenderEngine.GUI.Shader.UIGraphics;
+import com.Engine.RenderEngine.Lights.Light;
+>>>>>>> refs/remotes/origin/UI_Revission
 import com.Engine.RenderEngine.Models.ModelLoader;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO;
 import com.Engine.RenderEngine.New_Pipeline.FBO.FBO_Types.Attachment;
@@ -138,7 +143,11 @@ public class SceneTester {
 		
 		Keyboard.enableRepeatEvents(true);
 		
+<<<<<<< HEAD
 		double time = 0;
+=======
+		float time = 0;
+>>>>>>> refs/remotes/origin/UI_Revission
 		double frameTimeAvg = 0.0;
 		int frameAvgCounter = 0;	
 		while(!window.isCloseRequested()) {
@@ -223,7 +232,11 @@ public class SceneTester {
 //				UIModel.drawRect(100, 100, 250, 250);
 //				scene.render(camera, UIModel.RENDERER);
 				
+<<<<<<< HEAD
 				defaultCull.push();
+=======
+				defaultCull.enable();
+>>>>>>> refs/remotes/origin/UI_Revission
 				scene.render(camera, ParticleManager.ParticleShader.getRenderer());
 				FBO.allowMasterAccess(true);
 			FBO.unbindDraw(); 
@@ -299,6 +312,7 @@ public class SceneTester {
 			mesh2D.getShader().getRenderer().clear();
 			ParticleManager.ParticleShader.getRenderer().clear();
 			OrthoModel.RENDERER.clear();
+			UIGraphics.RENDERER.clear();
 			
 			window.update();
 			
